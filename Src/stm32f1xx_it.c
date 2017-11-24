@@ -34,13 +34,17 @@
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx.h"
 #include "stm32f1xx_it.h"
+#include "os.h"
+#include "USART3.h"
 
 /* USER CODE BEGIN 0 */
-
+extern int32_t RxSemaphore;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern ADC_HandleTypeDef hadc1;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 
@@ -67,7 +71,6 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -154,30 +157,30 @@ void DebugMon_Handler(void)
 /**
 * @brief This function handles Pendable request for system service.
 */
-void PendSV_Handler(void)
-{
-  /* USER CODE BEGIN PendSV_IRQn 0 */
+//void PendSV_Handler(void)
+//{
+//  /* USER CODE BEGIN PendSV_IRQn 0 */
 
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
+//  /* USER CODE END PendSV_IRQn 0 */
+//  /* USER CODE BEGIN PendSV_IRQn 1 */
 
-  /* USER CODE END PendSV_IRQn 1 */
-}
+//  /* USER CODE END PendSV_IRQn 1 */
+//}
 
 /**
 * @brief This function handles System tick timer.
 */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
+//void SysTick_Handler(void)
+//{
+//  /* USER CODE BEGIN SysTick_IRQn 0 */
 
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  HAL_SYSTICK_IRQHandler();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
+//  /* USER CODE END SysTick_IRQn 0 */
+//  HAL_IncTick();
+//  HAL_SYSTICK_IRQHandler();
+//  /* USER CODE BEGIN SysTick_IRQn 1 */
 
-  /* USER CODE END SysTick_IRQn 1 */
-}
+//  /* USER CODE END SysTick_IRQn 1 */
+//}
 
 /******************************************************************************/
 /* STM32F1xx Peripheral Interrupt Handlers                                    */
@@ -201,32 +204,62 @@ void ADC1_2_IRQHandler(void)
 }
 
 /**
-* @brief This function handles USART1 global interrupt.
+* @brief This function handles TIM3 global interrupt.
 */
-void USART1_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART1_IRQn 0 */
+//void TIM3_IRQHandler(void)
+//{
+//  /* USER CODE BEGIN TIM3_IRQn 0 */
 
-  /* USER CODE END USART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart1);
-  /* USER CODE BEGIN USART1_IRQn 1 */
+//  /* USER CODE END TIM3_IRQn 0 */
+//  HAL_TIM_IRQHandler(&htim3);
+//  /* USER CODE BEGIN TIM3_IRQn 1 */
 
-  /* USER CODE END USART1_IRQn 1 */
-}
+//  /* USER CODE END TIM3_IRQn 1 */
+//}
 
 /**
-* @brief This function handles USART3 global interrupt.
+* @brief This function handles TIM4 global interrupt.
 */
-void USART3_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART3_IRQn 0 */
+//void TIM4_IRQHandler(void)
+//{
+//  /* USER CODE BEGIN TIM4_IRQn 0 */
 
-  /* USER CODE END USART3_IRQn 0 */
-  HAL_UART_IRQHandler(&huart3);
-  /* USER CODE BEGIN USART3_IRQn 1 */
+//  /* USER CODE END TIM4_IRQn 0 */
+//  HAL_TIM_IRQHandler(&htim4);
+//  /* USER CODE BEGIN TIM4_IRQn 1 */
 
-  /* USER CODE END USART3_IRQn 1 */
-}
+//  /* USER CODE END TIM4_IRQn 1 */
+//}
+
+/**
+* @brief This function handles USART1 global interrupt.
+					Defined in USART1.c
+*/
+//void USART1_IRQHandler(void)
+//{
+//  /* USER CODE BEGIN USART1_IRQn 0 */
+
+//  /* USER CODE END USART1_IRQn 0 */
+//  HAL_UART_IRQHandler(&huart1);
+//  /* USER CODE BEGIN USART1_IRQn 1 */
+
+//  /* USER CODE END USART1_IRQn 1 */
+//}
+
+/**
+* @brief This function handles USART3 global interrupt. 
+					Defined in USART3.c
+*/
+//void USART3_IRQHandler(void)
+//{
+///* USER CODE BEGIN USART3_IRQn 0 */
+
+///* USER CODE END USART3_IRQn 0 */
+//HAL_UART_IRQHandler(&huart3);
+///* USER CODE BEGIN USART3_IRQn 1 */
+
+///* USER CODE END USART3_IRQn 1 */
+//}
 
 /* USER CODE BEGIN 1 */
 

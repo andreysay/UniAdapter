@@ -41,7 +41,7 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
+#include "stm32f1xx_ll_tim.h"
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
@@ -106,8 +106,9 @@
 #define GPIO_Ena 					GPIO_OUT_PA12_GPIO_Port
 #define PIN_EnaB					GPIO_OUT_PA15_Pin
 #define GPIO_EnaB					GPIO_OUT_PA15_GPIO_Port
-
 /* USER CODE END Private defines */
+#define RX_BUFFER_SIZE   16
+#define RX_MESSAGE_SIZE		8
 
 void _Error_Handler(char *, int);
 

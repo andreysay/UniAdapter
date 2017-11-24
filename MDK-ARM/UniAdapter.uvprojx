@@ -431,24 +431,59 @@
               <FilePath>../Src/adc.c</FilePath>
             </File>
             <File>
-              <FileName>UAdapterProxy.h</FileName>
+              <FileName>ErrorHandler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ErrorHandler.c</FilePath>
+            </File>
+            <File>
+              <FileName>os.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\os.c</FilePath>
+            </File>
+            <File>
+              <FileName>osasm.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Src\osasm.s</FilePath>
+            </File>
+            <File>
+              <FileName>BSP.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\BSP.c</FilePath>
+            </File>
+            <File>
+              <FileName>FIFO.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\FIFO.c</FilePath>
+            </File>
+            <File>
+              <FileName>tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>USART1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\USART1.c</FilePath>
+            </File>
+            <File>
+              <FileName>USART3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\USART3.c</FilePath>
+            </File>
+            <File>
+              <FileName>Televis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\Televis.c</FilePath>
+            </File>
+            <File>
+              <FileName>ControllerPort.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ControllerPort.c</FilePath>
+            </File>
+            <File>
+              <FileName>ControllerPort.h</FileName>
               <FileType>5</FileType>
-              <FilePath>..\Inc\UAdapterProxy.h</FilePath>
-            </File>
-            <File>
-              <FileName>PortProxy.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\PortProxy.c</FilePath>
-            </File>
-            <File>
-              <FileName>MU_PortProxy.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\MU_PortProxy.c</FilePath>
-            </File>
-            <File>
-              <FileName>LED_Proxy.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\LED_Proxy.c</FilePath>
+              <FilePath>..\Inc\ControllerPort.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -529,6 +564,26 @@
               <FileName>stm32f1xx_hal_flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Drivers/STM32F1xx_LL_Driver</GroupName>
+          <Files>
+            <File>
+              <FileName>stm32f1xx_ll_utils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_utils.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_ll_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1xx_ll_rcc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32F1xx_HAL_Driver\Src\stm32f1xx_ll_rcc.c</FilePath>
             </File>
           </Files>
         </Group>

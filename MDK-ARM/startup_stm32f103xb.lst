@@ -479,22 +479,102 @@ ARM Macro Assembler    Page 8
   294 0000001C                 ALIGN
   295 0000001C         
   296 0000001C         ;*******************************************************
+                       ***********************
+  297 0000001C         ;
+  298 0000001C         ; Make sure the end of this section is aligned.
+  299 0000001C         ;
+  300 0000001C         ;*******************************************************
+                       ***********************
+  301 0000001C                 ALIGN
+  302 0000001C         
+  303 0000001C         ;*******************************************************
+                       ***********************
+  304 0000001C         ;
+  305 0000001C         ; Some code in the normal code section for initializing 
+                       the heap and stack.
+  306 0000001C         ;
+  307 0000001C         ;*******************************************************
+                       ***********************
+  308 0000001C 00000000 
+              00000000         AREA             |.text|, CODE, READONLY
+  309 00000024         
+  310 00000024         ;*******************************************************
+                       ***********************
+  311 00000024         ;
+  312 00000024         ; Useful functions.
+  313 00000024         ;
+  314 00000024         ;*******************************************************
+                       ***********************
+  315 00000024                 EXPORT           DisableInterrupts
+  316 00000024                 EXPORT           EnableInterrupts
+  317 00000024                 EXPORT           StartCritical
+  318 00000024                 EXPORT           EndCritical
+  319 00000024                 EXPORT           WaitForInterrupt
+  320 00000024         
+  321 00000024         ;*********** DisableInterrupts ***************
+  322 00000024         ; disable interrupts
+  323 00000024         ; inputs:  none
+  324 00000024         ; outputs: none
+  325 00000024         DisableInterrupts
+  326 00000024 B672            CPSID            I
+  327 00000026 4770            BX               LR
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  328 00000028         
+  329 00000028         ;*********** EnableInterrupts ***************
+  330 00000028         ; enable interrupts
+  331 00000028         ; inputs:  none
+  332 00000028         ; outputs: none
+  333 00000028         EnableInterrupts
+  334 00000028 B662            CPSIE            I
+  335 0000002A 4770            BX               LR
+  336 0000002C         
+  337 0000002C         ;*********** StartCritical ************************
+  338 0000002C         ; make a copy of previous I bit, disable interrupts
+  339 0000002C         ; inputs:  none
+  340 0000002C         ; outputs: previous I bit
+  341 0000002C         StartCritical
+  342 0000002C F3EF 8010       MRS              R0, PRIMASK ; save old status
+  343 00000030 B672            CPSID            I           ; mask all (except 
+                                                            faults)
+  344 00000032 4770            BX               LR
+  345 00000034         
+  346 00000034         ;*********** EndCritical ************************
+  347 00000034         ; using the copy of previous I bit, restore I bit to pre
+                       vious value
+  348 00000034         ; inputs:  previous I bit
+  349 00000034         ; outputs: none
+  350 00000034         EndCritical
+  351 00000034 F380 8810       MSR              PRIMASK, R0
+  352 00000038 4770            BX               LR
+  353 0000003A         
+  354 0000003A         ;*********** WaitForInterrupt ************************
+  355 0000003A         ; go to low power mode while waiting for the next interr
+                       upt
+  356 0000003A         ; inputs:  none
+  357 0000003A         ; outputs: none
+  358 0000003A         WaitForInterrupt
+  359 0000003A BF30            WFI
+  360 0000003C 4770            BX               LR
+  361 0000003E         ;*******************************************************
                        ************************
-  297 0000001C         ; User Stack and Heap initialization
-  298 0000001C         ;*******************************************************
+  362 0000003E         ; User Stack and Heap initialization
+  363 0000003E         ;*******************************************************
                        ************************
-  299 0000001C                 IF               :DEF:__MICROLIB
-  300 0000001C         
-  301 0000001C                 EXPORT           __initial_sp
-  302 0000001C                 EXPORT           __heap_base
-  303 0000001C                 EXPORT           __heap_limit
-  304 0000001C         
-  305 0000001C                 ELSE
-  320                          ENDIF
-  321 0000001C         
-  322 0000001C                 END
-              00000000 
-              00000000 
+  364 0000003E                 IF               :DEF:__MICROLIB
+  365 0000003E         
+  366 0000003E                 EXPORT           __initial_sp
+  367 0000003E                 EXPORT           __heap_base
+  368 0000003E                 EXPORT           __heap_limit
+  369 0000003E         
+  370 0000003E                 ELSE
+  385                          ENDIF
+  386 0000003E         
+  387 0000003E                 END
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=uniadapter\startup_stm32f103xb.d -ouniadapter\startup_stm32f103xb.
 o -I.\RTE\_UniAdapter -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include -IC:\
@@ -531,7 +611,7 @@ Symbol: __initial_sp
       At line 54 in file startup_stm32f103xb.s
    Uses
       At line 78 in file startup_stm32f103xb.s
-      At line 301 in file startup_stm32f103xb.s
+      At line 366 in file startup_stm32f103xb.s
 
 3 symbols
 
@@ -562,7 +642,7 @@ Symbol: __heap_base
    Definitions
       At line 64 in file startup_stm32f103xb.s
    Uses
-      At line 302 in file startup_stm32f103xb.s
+      At line 367 in file startup_stm32f103xb.s
 Comment: __heap_base used once
 __heap_limit 00000200
 
@@ -570,7 +650,7 @@ Symbol: __heap_limit
    Definitions
       At line 66 in file startup_stm32f103xb.s
    Uses
-      At line 303 in file startup_stm32f103xb.s
+      At line 368 in file startup_stm32f103xb.s
 Comment: __heap_limit used once
 4 symbols
 
@@ -748,6 +828,14 @@ Symbol: Default_Handler
    Uses
       None
 Comment: Default_Handler unused
+DisableInterrupts 00000024
+
+Symbol: DisableInterrupts
+   Definitions
+      At line 325 in file startup_stm32f103xb.s
+   Uses
+      At line 315 in file startup_stm32f103xb.s
+Comment: DisableInterrupts used once
 EXTI0_IRQHandler 0000001A
 
 Symbol: EXTI0_IRQHandler
@@ -793,6 +881,12 @@ Symbol: EXTI3_IRQHandler
       At line 105 in file startup_stm32f103xb.s
       At line 211 in file startup_stm32f103xb.s
 
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Relocatable symbols
+
 EXTI4_IRQHandler 0000001A
 
 Symbol: EXTI4_IRQHandler
@@ -801,12 +895,6 @@ Symbol: EXTI4_IRQHandler
    Uses
       At line 106 in file startup_stm32f103xb.s
       At line 212 in file startup_stm32f103xb.s
-
-
-
-ARM Macro Assembler    Page 4 Alphabetic symbol ordering
-Relocatable symbols
-
 
 EXTI9_5_IRQHandler 0000001A
 
@@ -817,6 +905,22 @@ Symbol: EXTI9_5_IRQHandler
       At line 119 in file startup_stm32f103xb.s
       At line 225 in file startup_stm32f103xb.s
 
+EnableInterrupts 00000028
+
+Symbol: EnableInterrupts
+   Definitions
+      At line 333 in file startup_stm32f103xb.s
+   Uses
+      At line 316 in file startup_stm32f103xb.s
+Comment: EnableInterrupts used once
+EndCritical 00000034
+
+Symbol: EndCritical
+   Definitions
+      At line 350 in file startup_stm32f103xb.s
+   Uses
+      At line 318 in file startup_stm32f103xb.s
+Comment: EndCritical used once
 FLASH_IRQHandler 0000001A
 
 Symbol: FLASH_IRQHandler
@@ -842,6 +946,12 @@ Symbol: I2C1_ER_IRQHandler
       At line 278 in file startup_stm32f103xb.s
    Uses
       At line 128 in file startup_stm32f103xb.s
+
+
+
+ARM Macro Assembler    Page 5 Alphabetic symbol ordering
+Relocatable symbols
+
       At line 234 in file startup_stm32f103xb.s
 
 I2C1_EV_IRQHandler 0000001A
@@ -866,12 +976,6 @@ I2C2_EV_IRQHandler 0000001A
 
 Symbol: I2C2_EV_IRQHandler
    Definitions
-
-
-
-ARM Macro Assembler    Page 5 Alphabetic symbol ordering
-Relocatable symbols
-
       At line 279 in file startup_stm32f103xb.s
    Uses
       At line 129 in file startup_stm32f103xb.s
@@ -907,6 +1011,12 @@ Symbol: PVD_IRQHandler
 PendSV_Handler 00000016
 
 Symbol: PendSV_Handler
+
+
+
+ARM Macro Assembler    Page 6 Alphabetic symbol ordering
+Relocatable symbols
+
    Definitions
       At line 191 in file startup_stm32f103xb.s
    Uses
@@ -930,12 +1040,6 @@ Symbol: RTC_Alarm_IRQHandler
    Uses
       At line 137 in file startup_stm32f103xb.s
       At line 243 in file startup_stm32f103xb.s
-
-
-
-
-ARM Macro Assembler    Page 6 Alphabetic symbol ordering
-Relocatable symbols
 
 RTC_IRQHandler 0000001A
 
@@ -973,6 +1077,12 @@ Symbol: SPI2_IRQHandler
       At line 132 in file startup_stm32f103xb.s
       At line 238 in file startup_stm32f103xb.s
 
+
+
+ARM Macro Assembler    Page 7 Alphabetic symbol ordering
+Relocatable symbols
+
+
 SVC_Handler 00000012
 
 Symbol: SVC_Handler
@@ -982,6 +1092,14 @@ Symbol: SVC_Handler
       At line 89 in file startup_stm32f103xb.s
       At line 183 in file startup_stm32f103xb.s
 
+StartCritical 0000002C
+
+Symbol: StartCritical
+   Definitions
+      At line 341 in file startup_stm32f103xb.s
+   Uses
+      At line 317 in file startup_stm32f103xb.s
+Comment: StartCritical used once
 SysTick_Handler 00000018
 
 Symbol: SysTick_Handler
@@ -996,12 +1114,6 @@ TAMPER_IRQHandler 0000001A
 Symbol: TAMPER_IRQHandler
    Definitions
       At line 248 in file startup_stm32f103xb.s
-
-
-
-ARM Macro Assembler    Page 7 Alphabetic symbol ordering
-Relocatable symbols
-
    Uses
       At line 98 in file startup_stm32f103xb.s
       At line 204 in file startup_stm32f103xb.s
@@ -1029,6 +1141,12 @@ TIM1_TRG_COM_IRQHandler 0000001A
 Symbol: TIM1_TRG_COM_IRQHandler
    Definitions
       At line 272 in file startup_stm32f103xb.s
+
+
+
+ARM Macro Assembler    Page 8 Alphabetic symbol ordering
+Relocatable symbols
+
    Uses
       At line 122 in file startup_stm32f103xb.s
       At line 228 in file startup_stm32f103xb.s
@@ -1062,12 +1180,6 @@ Symbol: TIM3_IRQHandler
 
 TIM4_IRQHandler 0000001A
 
-
-
-ARM Macro Assembler    Page 8 Alphabetic symbol ordering
-Relocatable symbols
-
-
 Symbol: TIM4_IRQHandler
    Definitions
       At line 276 in file startup_stm32f103xb.s
@@ -1094,6 +1206,12 @@ Symbol: USART2_IRQHandler
       At line 240 in file startup_stm32f103xb.s
 
 USART3_IRQHandler 0000001A
+
+
+
+ARM Macro Assembler    Page 9 Alphabetic symbol ordering
+Relocatable symbols
+
 
 Symbol: USART3_IRQHandler
    Definitions
@@ -1126,12 +1244,6 @@ Symbol: USB_LP_CAN1_RX0_IRQHandler
    Definitions
       At line 266 in file startup_stm32f103xb.s
    Uses
-
-
-
-ARM Macro Assembler    Page 9 Alphabetic symbol ordering
-Relocatable symbols
-
       At line 116 in file startup_stm32f103xb.s
       At line 222 in file startup_stm32f103xb.s
 
@@ -1153,7 +1265,21 @@ Symbol: WWDG_IRQHandler
       At line 96 in file startup_stm32f103xb.s
       At line 202 in file startup_stm32f103xb.s
 
-55 symbols
+WaitForInterrupt 0000003A
+
+Symbol: WaitForInterrupt
+   Definitions
+      At line 358 in file startup_stm32f103xb.s
+   Uses
+
+
+
+ARM Macro Assembler    Page 10 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 319 in file startup_stm32f103xb.s
+Comment: WaitForInterrupt used once
+60 symbols
 
 
 
@@ -1208,4 +1334,4 @@ Symbol: __main
       At line 152 in file startup_stm32f103xb.s
 Comment: __main used once
 2 symbols
-407 symbols in table
+412 symbols in table

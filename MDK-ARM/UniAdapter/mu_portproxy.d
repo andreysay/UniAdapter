@@ -31,3 +31,5 @@ uniadapter\mu_portproxy.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uar
 uniadapter\mu_portproxy.o: ../Inc/UAdapterProxy.h
 uniadapter\mu_portproxy.o: ../Inc/PortProxy.h
 uniadapter\mu_portproxy.o: ../Inc/usart.h
+uniadapter\mu_portproxy.o: ../Inc/ErrorHandler.h
+uniadapter\mu_portproxy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
