@@ -14,9 +14,12 @@
 	
 extern int32_t U1_TxSemaphore; // defined in main.c file
 extern int32_t U1_RxSemaphore; // defined in main.c file
+extern int32_t PortCtrlRxInitSema;
 extern __IO uint32_t U1_idxTx; // defined in main.c file
 extern uint8_t U1_TXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
-extern uint8_t U1_RXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
+// extern uint8_t U1_RXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
+extern uint8_t *pBufferMessage;
+extern uint8_t *pBufferReception;
 extern __IO uint32_t U1_idxRx; // defined in main.c file
 extern __IO uint32_t     U1_BufferReadyIndication; // defined in main.c file
 extern CtrlPortReg CtrlPortRegisters;	// defined in ControllerPort.c
@@ -77,7 +80,7 @@ void USART1_Init(void){
   LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
 
   /* 8 data bit, 1 start bit, 1 stop bit, no parity */
-  LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
+  LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_2);
 
   /* No Hardware Flow control */
   /* Reset value is LL_USART_HWCONTROL_NONE */
@@ -103,24 +106,22 @@ void USART1_Init(void){
   */
 void USART1_TransmitComplete_Callback(void)
 {
-	/* Disable RXNE interrupt */
-	LL_USART_DisableIT_RXNE(USART1);
 	if(U1_idxTx == RX_MESSAGE_SIZE)
   { 
 		U1_idxTx = 0;
     /* Disable TC interrupt */
     LL_USART_DisableIT_TC(USART1);
 		/* Set EnaRx and EnaTx pin in reception mode */
-		CtrlPortRegisters.EnaRx = GPIO_PIN_SET;
+		CtrlPortRegisters.EnaRx = GPIO_PIN_RESET;
 		CtrlPortRegisters.EnaTx = GPIO_PIN_RESET;
-		HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, GPIO_PIN_RESET);
     /* Turn LED2 On at end of transfer : Tx sequence completed successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
-		/* Set RX direction */
+
 		LL_USART_EnableDirectionRx(USART1);
   }
 }
@@ -152,16 +153,23 @@ void USART1_TXEmpty_Callback(void)
   */
 void USART1_Reception_Callback(void)
 {
+//	uint8_t *ptemp;
 	/* Read Received character. RXNE flag is cleared by reading of DR register */
-	U1_RXBuffer[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
+	pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
 
   /* Checks if Buffer full indication has been set */
-  if (U1_idxRx == RX_MESSAGE_SIZE)
+  if (U1_idxRx == RX_MESSAGE_SIZE - 1)
   {
+    /* Swap buffers for next bytes to be received */
+//    ptemp = pBufferMessage;
+//    pBufferMessage = pBufferReception;
+//    pBufferReception = ptemp;
+		
 		/* Set Buffer swap indication */
     U1_BufferReadyIndication = 1;
 		U1_idxRx = 0;
   }
+	OS_Signal(&U1_RxSemaphore);
 }
 
 /**
@@ -170,24 +178,26 @@ void USART1_Reception_Callback(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
+	if(LL_USART_IsActiveFlag_RXNE(USART1) && LL_USART_IsEnabledIT_RXNE(USART1))   /* Check RXNE flag value in SR register */
+  {
+    /* RXNE flag will be cleared by reading of DR register (done in call) */
+    /* Call function in charge of handling Character reception */
+		USART1_Reception_Callback();
+  }	
 	if(LL_USART_IsEnabledIT_TXE(USART1) && LL_USART_IsActiveFlag_TXE(USART1))
 	{
 		/* TXE flag will be automatically cleared when writing new data in DR register */
 		/* Call function in charge of handling empty DR => will lead to transmission of next character */
 		/* Disable RXNE interrupt */
     USART1_TXEmpty_Callback();
-	} else if(LL_USART_IsEnabledIT_TC(USART1) && LL_USART_IsActiveFlag_TC(USART1))
+	}
+	if(LL_USART_IsEnabledIT_TC(USART1) && LL_USART_IsActiveFlag_TC(USART1))
 	{
 		/* Clear TC flag */
 		LL_USART_ClearFlag_TC(USART1);
 		/* Call function in charge of handling end of transmission of sent character
 				and prepare next charcater transmission */
 		USART1_TransmitComplete_Callback();
-  } else if(LL_USART_IsActiveFlag_RXNE(USART1) && LL_USART_IsEnabledIT_RXNE(USART1))   /* Check RXNE flag value in SR register */
-  {
-    /* RXNE flag will be cleared by reading of DR register (done in call) */
-    /* Call function in charge of handling Character reception */
-		USART1_Reception_Callback();
   }
 	
   /* USER CODE END USART3_IRQn 0 */

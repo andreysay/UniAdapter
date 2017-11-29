@@ -113,6 +113,7 @@ void USART3_TransmitComplete_Callback(void)
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
+//		LL_USART_EnableDirectionRx(USART3);
   }
 }
 
@@ -162,24 +163,24 @@ void USART3_Reception_Callback(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
+	if(LL_USART_IsActiveFlag_RXNE(USART3) && LL_USART_IsEnabledIT_RXNE(USART3))   /* Check RXNE flag value in SR register */
+  {
+    /* RXNE flag will be cleared by reading of DR register (done in call) */
+    /* Call function in charge of handling Character reception */
+		USART3_Reception_Callback();
+  }	
 	if(LL_USART_IsEnabledIT_TXE(USART3) && LL_USART_IsActiveFlag_TXE(USART3))
 	{
 		/* Call function in charge of handling empty DR => will lead to transmission of next character */
     USART_TXEmpty_Callback();
 	}
-	else if(LL_USART_IsEnabledIT_TC(USART3) && LL_USART_IsActiveFlag_TC(USART3))
+	if(LL_USART_IsEnabledIT_TC(USART3) && LL_USART_IsActiveFlag_TC(USART3))
 	{
 		/* Clear TC flag */
 		LL_USART_ClearFlag_TC(USART3);
 		/* Call function in charge of handling end of transmission of sent character
 				and prepare next charcater transmission */
 		USART3_TransmitComplete_Callback();
-  }
-	else if(LL_USART_IsActiveFlag_RXNE(USART3) && LL_USART_IsEnabledIT_RXNE(USART3))   /* Check RXNE flag value in SR register */
-  {
-    /* RXNE flag will be cleared by reading of DR register (done in call) */
-    /* Call function in charge of handling Character reception */
-		USART3_Reception_Callback();
   }
   /* USER CODE END USART3_IRQn 0 */
 

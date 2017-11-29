@@ -105,12 +105,17 @@ int32_t PortCtrlTxInitSema;
 int32_t PortCtrlRxInitSema;
 int32_t U1_TxSemaphore;
 int32_t U1_RxSemaphore;
+int32_t CtrlRxTimeIsNotExpired = 1;
 __IO uint32_t U1_idxTx = 0;
 __IO uint32_t U1_idxRx = 0;
 
-uint8_t U1_RXBuffer[RX_BUFFER_SIZE];
+uint8_t U1_RXBufferA[RX_MESSAGE_SIZE];
+uint8_t U1_RXBufferB[RX_MESSAGE_SIZE];
 uint8_t U1_TXBuffer[RX_BUFFER_SIZE];
 __IO uint32_t     U1_BufferReadyIndication;
+
+uint8_t *pBufferMessage;
+uint8_t *pBufferReception;
 
 int TimeResult;
 int TimePrev = 0;
@@ -148,7 +153,9 @@ void EventThread1(void){
   Count4 = 0;
 	while(1){
 		OS_Wait(&TxLedSemaphore);
+		CtrlRxTimeIsNotExpired = 0;
 //		OS_Signal(&PortCtrlTxInitSema);
+//		OS_Signal(&U3_TxSemaphore);
 		Count4++;
 	};
 }
@@ -202,6 +209,7 @@ void MU_PortSendMsg(void){
 	Count2 = 0;
 	while(1){
 		OS_Wait(&U3_TxSemaphore);
+//		LL_USART_DisableDirectionRx(USART3);
 		HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_SET);
 		/* Fill DR with a new char */
 		LL_USART_TransmitData8(USART3, U3_TXBuffer[U3_idxTx++]);
@@ -217,18 +225,18 @@ void CtrlPortRxInit(void)
 {
 	Count7 = 0;
 	while(1){
-		OS_Wait(&PortCtrlRxInitSema);
-		CtrlPortRegistersRxInit();
+		OS_Wait(&PortCtrlRxInitSema); // Will signal in USART1_TransmitComplete_Callback function USART1.c
+//		CtrlPortRegistersRxInit();
 		/* Initializes Buffer indication : */
 		U1_BufferReadyIndication = 0;
-		/* Clear Overrun flag, in case characters have already been sent to USART */
-		LL_USART_ClearFlag_ORE(USART1);
+		/* Initializes time expiration semaphore */
+		CtrlRxTimeIsNotExpired = 1;
+		pBufferReception 		= U1_RXBufferA;
+		pBufferMessage      = U1_RXBufferB;
 		/* Enable RXNE */
 		LL_USART_EnableIT_RXNE(USART1);		
-		if(!LL_USART_IsEnabledIT_ERROR(USART1)){
-				/* Enable Error interrupt */
-			LL_USART_EnableIT_ERROR(USART1);
-		}
+		/* Enable Error interrupt */
+		LL_USART_EnableIT_ERROR(USART1);
 		OS_Signal(&U1_RxSemaphore);
 		Count7++;
 	}
@@ -239,34 +247,24 @@ void CtrlPortHandleContinuousReception(void)
 	Count8 = 0;
 	uint8_t i;
 	while(1){
-		OS_Wait(&U1_RxSemaphore);
-		if(LL_USART_IsActiveFlag_ORE(USART1)){
-			/* Clear Overrun flag, in case characters have already been sent to USART */
-			LL_USART_ClearFlag_ORE(USART1);
-		}
-		if(!LL_USART_IsEnabledIT_RXNE(USART1)){
-			/* Enable RXNE */
-			LL_USART_EnableIT_RXNE(USART1);			
-		}
-		if(!LL_USART_IsEnabledIT_ERROR(USART1)){
-				/* Enable Error interrupt */
-			LL_USART_EnableIT_ERROR(USART1);
-		}
-		/* Checks if Buffer full indication has been set */
-		if (U1_BufferReadyIndication != 0)
-		{
-			DisableInterrupts();
-			/* Reset indication */
-			U1_BufferReadyIndication = 0;
-			
-			for(i = 0; i < RX_MESSAGE_SIZE; i++){
-				U3_TXBuffer[i] = U1_RXBuffer[i];
-			}
-			EnableInterrupts();
-			OS_Signal(&U3_TxSemaphore);
+//		if(CtrlRxTimeIsNotExpired){
 			OS_Wait(&U1_RxSemaphore);
-		}
-		OS_Signal(&U1_RxSemaphore);
+			/* Checks if Buffer full indication has been set */			
+			if (U1_BufferReadyIndication != 0)
+			{
+				DisableInterrupts();
+				/* Reset indication */
+				U1_BufferReadyIndication = 0;
+				for(i = 0; i < (RX_MESSAGE_SIZE - 1); i++){
+					U3_TXBuffer[i] = pBufferReception[i];
+				}
+				EnableInterrupts();
+				OS_Signal(&U3_TxSemaphore);
+				OS_Wait(&U1_RxSemaphore);
+			} 
+//			else {
+//				OS_Signal(&U1_RxSemaphore);
+//			}
 		Count8++;
 	}
 }
@@ -289,13 +287,12 @@ void CtrlPortTxInit(void)
 void CtrlPortSendMsg(void){
 	Count6 = 0;
 	while(1){
-		OS_Wait(&U1_TxSemaphore);		
-		// Disable RX direction
+		OS_Wait(&U1_TxSemaphore);
 		LL_USART_DisableDirectionRx(USART1);
 		LL_USART_TransmitData8(USART1, U1_TXBuffer[U1_idxTx++]);
 		/* Enable TXE interrupt */
 		LL_USART_EnableIT_TXE(USART1); 
-		OS_Signal(&U1_RxSemaphore);
+		OS_Signal(&PortCtrlRxInitSema);
 		Count6++;
 	}
 }
@@ -337,9 +334,9 @@ int main(void)
 	USART3_Init();
   MX_ADC1_Init();
   MX_TIM4_Init();
-//  MX_TIM3_Init();
+  MX_TIM3_Init();
 	CtrlPortRegistersInit();
-//  /* USER CODE BEGIN 2 */
+  /* USER CODE BEGIN 2 */
 	TimeSec = 0;
 	OS_PeriodTrigger0_Init(&RxLedSemaphore, 100);
 	OS_PeriodTrigger1_Init(&TxLedSemaphore, 1000);
