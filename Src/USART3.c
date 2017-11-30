@@ -19,6 +19,7 @@ extern __IO uint32_t U3_idxRx; // defined in main.c file
 extern uint8_t U3_TXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
 extern uint8_t U3_RXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
 extern __IO uint32_t     U3_BufferReadyIndication; // defined in main.c file
+extern uint8_t U3_TxMessageSize;
 
 //------------UART3_Init------------
 /**
@@ -101,7 +102,7 @@ void USART3_Init(void){
   */
 void USART3_TransmitComplete_Callback(void)
 {
-	if(U3_idxTx == RX_MESSAGE_SIZE)
+	if(U3_idxTx >= U3_TxMessageSize)
   { 
 		U3_idxTx = 0;
     /* Disable TC interrupt */
@@ -113,7 +114,7 @@ void USART3_TransmitComplete_Callback(void)
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
-//		LL_USART_EnableDirectionRx(USART3);
+
   }
 }
 
@@ -124,7 +125,7 @@ void USART3_TransmitComplete_Callback(void)
   */
 void USART_TXEmpty_Callback(void)
 {
-  if(U3_idxTx == (RX_MESSAGE_SIZE - 1))
+  if(U3_idxTx >= (U3_TxMessageSize - 1))
   {
     /* Disable TXE interrupt */
     LL_USART_DisableIT_TXE(USART3);
@@ -149,7 +150,7 @@ void USART3_Reception_Callback(void)
   U3_RXBuffer[U3_idxRx++] = LL_USART_ReceiveData8(USART3);
 
   /* Checks if Buffer full indication has been set */
-  if (U3_idxRx == RX_MESSAGE_SIZE)
+  if (U3_idxRx >= RX_MESSAGE_SIZE)
   {
 		/* Set Buffer swap indication */
     U3_BufferReadyIndication = 1;

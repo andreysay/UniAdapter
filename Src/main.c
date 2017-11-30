@@ -3,37 +3,6 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
-  *
-  * COPYRIGHT(c) 2017 STMicroelectronics
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
 #include "string.h"
@@ -52,6 +21,7 @@
 #include "FIFO.h"
 #include "USART1.h"
 #include "ControllerPort.h"
+#include "Televis.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -94,7 +64,7 @@ __IO uint32_t     U3_BufferReadyIndication;
 __IO uint32_t U3_idxTx = 0;
 // index to move on buffer U3_RXBuffer[]
 __IO uint32_t U3_idxRx = 0;
-//uint8_t *pBufferReadyForReception;
+uint8_t U3_TxMessageSize = 0;
 
 /**
   * @brief RX/TX buffers and semaphores for storing received data through USART1
@@ -113,15 +83,14 @@ uint8_t U1_RXBufferA[RX_MESSAGE_SIZE];
 uint8_t U1_RXBufferB[RX_MESSAGE_SIZE];
 uint8_t U1_TXBuffer[RX_BUFFER_SIZE];
 __IO uint32_t     U1_BufferReadyIndication;
+uint8_t U1_RxMessageSize = 0;
 
 uint8_t *pBufferMessage;
 uint8_t *pBufferReception;
 
-int TimeResult;
-int TimePrev = 0;
-volatile int Time = 0;
-volatile int TimeSec = 0;
-volatile int TCounter;
+TEvent Event;
+bool DeviceFound = false;
+uint8_t ReplyCntr;
 
 /* USER CODE END PV */
 
@@ -135,17 +104,9 @@ void EventThread100ms(void){
 	Count3 = 0;
 	while(1){
 		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
-		TCounter = LL_TIM_GetCounter(TIM4);
-		Time = TCounter + TimeSec;
-		if(!TimePrev){
-			TimeResult = Time;
-			TimePrev = Time;
-		} else {
-			TimeResult = Time - TimePrev;
-			TimePrev = Time;
-		}
 		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
 		HAL_GPIO_TogglePin(GPIOB, LED_GRN_PIN);
+		while(CtrlRxTimeIsNotExpired){ CtrlRxTimeIsNotExpired--; };
 		Count3++;
 	};
 }
@@ -153,9 +114,6 @@ void EventThread1sec(void){
   Count4 = 0;
 	while(1){
 		OS_Wait(&Time1secSemaphore);
-		CtrlRxTimeIsNotExpired = 0;
-//		OS_Signal(&PortCtrlTxInitSema);
-//		OS_Signal(&U3_TxSemaphore);
 		Count4++;
 	};
 }
@@ -166,7 +124,7 @@ void MU_PortReceptionInit(void)
 		OS_Wait(&U3_RxInitSema);
 		HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_RESET);
 		// Initialize number of received bytes
-		U3_idxTx = 0;
+		U3_idxRx = 0;
 		// Initialize buffer ready indication
 		U3_BufferReadyIndication = 0;
 
@@ -209,7 +167,6 @@ void MU_PortSendMsg(void){
 	Count2 = 0;
 	while(1){
 		OS_Wait(&U3_TxSemaphore);
-//		LL_USART_DisableDirectionRx(USART3);
 		HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_SET);
 		/* Fill DR with a new char */
 		LL_USART_TransmitData8(USART3, U3_TXBuffer[U3_idxTx++]);
@@ -226,13 +183,16 @@ void CtrlPortRxInit(void)
 	Count7 = 0;
 	while(1){
 		OS_Wait(&PortCtrlRxInitSema); // Will signal in USART1_TransmitComplete_Callback function USART1.c
-//		CtrlPortRegistersRxInit();
 		/* Initializes Buffer indication : */
 		U1_BufferReadyIndication = 0;
 		/* Initializes time expiration semaphore */
-		CtrlRxTimeIsNotExpired = 1;
+		CtrlRxTimeIsNotExpired = 5;
+		/* Initialize index to move on buffer */
+		U1_idxRx = 0;
 		pBufferReception 		= U1_RXBufferA;
 		pBufferMessage      = U1_RXBufferB;
+		/* Enable IDLE */
+		LL_USART_EnableIT_IDLE(USART1);
 		/* Enable RXNE */
 		LL_USART_EnableIT_RXNE(USART1);		
 		/* Enable Error interrupt */
@@ -247,24 +207,26 @@ void CtrlPortHandleContinuousReception(void)
 	Count8 = 0;
 	uint8_t i;
 	while(1){
-//		if(CtrlRxTimeIsNotExpired){
-			OS_Wait(&U1_RxSemaphore);
+		if(CtrlRxTimeIsNotExpired){ // If time not expired
+			OS_Wait(&U1_RxSemaphore); // Will signal from USART1_IDLE_Callback function in USART1.c driven by interrupt
 			/* Checks if Buffer full indication has been set */			
 			if (U1_BufferReadyIndication != 0)
 			{
 				DisableInterrupts();
 				/* Reset indication */
 				U1_BufferReadyIndication = 0;
-				for(i = 0; i < (RX_MESSAGE_SIZE - 1); i++){
+				U3_TxMessageSize = U1_RxMessageSize;
+				for(i = 0; i < U1_RxMessageSize; i++){
 					U3_TXBuffer[i] = pBufferReception[i];
 				}
 				EnableInterrupts();
 				OS_Signal(&U3_TxSemaphore);
 				OS_Wait(&U1_RxSemaphore);
-			} 
-//			else {
-//				OS_Signal(&U1_RxSemaphore);
-//			}
+			}			
+		} else {
+			OS_Signal(&U3_TxSemaphore);
+			OS_Wait(&U1_RxSemaphore);
+		}
 		Count8++;
 	}
 }
@@ -337,7 +299,7 @@ int main(void)
   MX_TIM3_Init();
 	CtrlPortRegistersInit();
   /* USER CODE BEGIN 2 */
-	TimeSec = 0;
+
 	OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 	OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
 	OS_InitSemaphore(&U3_RxInitSema, 1);

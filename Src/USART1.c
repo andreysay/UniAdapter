@@ -23,6 +23,7 @@ extern uint8_t *pBufferReception;
 extern __IO uint32_t U1_idxRx; // defined in main.c file
 extern __IO uint32_t     U1_BufferReadyIndication; // defined in main.c file
 extern CtrlPortReg CtrlPortRegisters;	// defined in ControllerPort.c
+extern uint8_t U1_RxMessageSize;
 
 
 //------------UART1_Init------------
@@ -158,18 +159,33 @@ void USART1_Reception_Callback(void)
 	pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
 
   /* Checks if Buffer full indication has been set */
-  if (U1_idxRx == RX_MESSAGE_SIZE - 1)
-  {
-    /* Swap buffers for next bytes to be received */
-//    ptemp = pBufferMessage;
-//    pBufferMessage = pBufferReception;
-//    pBufferReception = ptemp;
-		
-		/* Set Buffer swap indication */
-    U1_BufferReadyIndication = 1;
-		U1_idxRx = 0;
-  }
-	OS_Signal(&U1_RxSemaphore);
+//  if (U1_idxRx == RX_MESSAGE_SIZE - 1)
+//  {
+//    /* Swap buffers for next bytes to be received */
+////    ptemp = pBufferMessage;
+////    pBufferMessage = pBufferReception;
+////    pBufferReception = ptemp;
+//		
+//		/* Set Buffer swap indication */
+//    U1_BufferReadyIndication = 1;
+//		U1_idxRx = 0;
+//  }
+//	OS_Signal(&U1_RxSemaphore);
+}
+
+/**
+  * @brief  Function called from USART IRQ Handler when IDLE flag is set
+  *         Function is in charge of signal to main thread CtrlPortHandleContinuousReception
+  *					that reception of data has been end.
+  * @param  None
+  * @retval None
+  */
+void USART1_IDLE_Callback(void){
+	U1_BufferReadyIndication = 1;
+	U1_RxMessageSize = U1_idxRx;
+	U1_idxRx = 0;
+	LL_USART_ClearFlag_IDLE(USART1);
+	OS_Signal(&U1_RxSemaphore);	
 }
 
 /**
@@ -199,6 +215,13 @@ void USART1_IRQHandler(void)
 				and prepare next charcater transmission */
 		USART1_TransmitComplete_Callback();
   }
+	if(LL_USART_IsActiveFlag_IDLE(USART1) && LL_USART_IsEnabledIT_IDLE(USART1))   /* Check IDLE flag value in SR register */
+  {
+    /* IDLE flag will be cleared by a software sequence (an read to the
+				USART_SR register followed by a read to the USART_DR register (done in call) */
+    /* Call function in charge of handling Idle interrupt */
+		USART1_IDLE_Callback();
+  }	
 	
   /* USER CODE END USART3_IRQn 0 */
 
