@@ -79,9 +79,9 @@ int32_t U3_TxSemaphore;
 int32_t U3_RxInitSema;
 
 // RxLed - green light
-int32_t RxLedSemaphore;
+int32_t Time100msSemaphore;
 // TxLed - orange light
-int32_t TxLedSemaphore;
+int32_t Time1secSemaphore;
 
 /**
   * @brief RX buffers for storing received data through USART3
@@ -131,10 +131,10 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-void EventThread0(void){
+void EventThread100ms(void){
 	Count3 = 0;
 	while(1){
-		OS_Wait(&RxLedSemaphore);           // 1000 Hz real time task
+		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
 		TCounter = LL_TIM_GetCounter(TIM4);
 		Time = TCounter + TimeSec;
 		if(!TimePrev){
@@ -149,10 +149,10 @@ void EventThread0(void){
 		Count3++;
 	};
 }
-void EventThread1(void){ 
+void EventThread1sec(void){ 
   Count4 = 0;
 	while(1){
-		OS_Wait(&TxLedSemaphore);
+		OS_Wait(&Time1secSemaphore);
 		CtrlRxTimeIsNotExpired = 0;
 //		OS_Signal(&PortCtrlTxInitSema);
 //		OS_Signal(&U3_TxSemaphore);
@@ -338,13 +338,13 @@ int main(void)
 	CtrlPortRegistersInit();
   /* USER CODE BEGIN 2 */
 	TimeSec = 0;
-	OS_PeriodTrigger0_Init(&RxLedSemaphore, 100);
-	OS_PeriodTrigger1_Init(&TxLedSemaphore, 1000);
+	OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
+	OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
 	OS_InitSemaphore(&U3_RxInitSema, 1);
 	OS_InitSemaphore(&U3_RxSemaphore, 0);
 	OS_InitSemaphore(&U3_TxSemaphore, 0);
-	OS_InitSemaphore(&RxLedSemaphore, 0);
-	OS_InitSemaphore(&TxLedSemaphore, 0);
+	OS_InitSemaphore(&Time100msSemaphore, 0);
+	OS_InitSemaphore(&Time1secSemaphore, 0);
 	
 	OS_InitSemaphore(&PortCtrlRxInitSema, 0);
 	OS_InitSemaphore(&U1_RxSemaphore, 0);
@@ -363,8 +363,8 @@ int main(void)
 	
 	OS_AddThread(&MU_PortSendMsg, 2);
 	
-	OS_AddThread(&EventThread0, 2);
-	OS_AddThread(&EventThread1, 2);
+	OS_AddThread(&EventThread100ms, 2);
+	OS_AddThread(&EventThread1sec, 2);
 	OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
 	OS_Launch(BSP_Clock_GetFreq()/THREADFREQ); // doesn't return, interrupts enabled in here
   /* USER CODE END 2 */
