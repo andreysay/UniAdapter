@@ -16,6 +16,22 @@
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
+#define CMD03    0x03
+#define CMD06    0x06
+#define CMD10    0x10
+#define CMD43    0x2B
+#define CMD73    0x73
+#define CMD76    0x76
+#define SCAN     0xD6
+#define DEBUG    0xD6
+#define ADDR     0xDD
+#define FARLOOP1 1
+#define FARLOOP2 2
+#define NEARLOOP 3
+#define BROADCAST 254
+#define BUFLEN 32
+#define REPLYCNTR 10
+
 //----------------------------------------------
 typedef struct ModbusCmd //Read Holding Regs
 {
@@ -64,6 +80,8 @@ typedef struct ModbusReply10
   uint32_t num;//Regs num written, usually 0x0001, MSB first
 }ModbusReply10;
 
+bool ModbusReceive(uint8_t *data);
 
+bool TModbusReceive(TEvent *ev);
 #endif /* __MODBUS_H */
 /************************ (C) COPYRIGHT *****END OF FILE****/

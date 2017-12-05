@@ -38,7 +38,7 @@
 #include "USART3.h"
 
 /* USER CODE BEGIN 0 */
-extern int32_t RxSemaphore;
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/

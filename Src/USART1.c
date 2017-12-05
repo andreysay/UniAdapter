@@ -12,18 +12,19 @@
 #include "USART1.h"
 #include "ControllerPort.h"
 	
-extern int32_t U1_TxSemaphore; // defined in main.c file
-extern int32_t U1_RxSemaphore; // defined in main.c file
+extern int32_t U1_TxSemaphore; // defined in Dixel.c file
+extern int32_t U1_RxSemaphore; // defined in Dixel.c file
 extern int32_t PortCtrlRxInitSema;
-extern __IO uint32_t U1_idxTx; // defined in main.c file
-extern uint8_t U1_TXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
-// extern uint8_t U1_RXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
+extern __IO uint32_t U1_idxTx; // defined in Dixel.c file
+extern uint8_t U1_TXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
+// extern uint8_t U1_RXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
 extern uint8_t *pBufferMessage;
 extern uint8_t *pBufferReception;
-extern __IO uint32_t U1_idxRx; // defined in main.c file
-extern __IO uint32_t     U1_BufferReadyIndication; // defined in main.c file
+extern __IO uint32_t U1_idxRx; // defined in Dixel.c file
+extern __IO uint32_t     U1_BufferReadyIndication; // defined in Dixel.c file
 extern CtrlPortReg CtrlPortRegisters;	// defined in ControllerPort.c
-extern uint8_t U1_RxMessageSize;
+extern uint8_t U1_RxMessageSize; // defined in Dixel.c file
+extern uint8_t U1_TxMessageSize; // defined in Dixel.c file
 
 
 //------------UART1_Init------------
@@ -107,23 +108,22 @@ void USART1_Init(void){
   */
 void USART1_TransmitComplete_Callback(void)
 {
-	if(U1_idxTx == RX_MESSAGE_SIZE)
+	if(U1_idxTx >= U1_TxMessageSize)
   { 
 		U1_idxTx = 0;
     /* Disable TC interrupt */
     LL_USART_DisableIT_TC(USART1);
+#ifdef RS485
 		/* Set EnaRx and EnaTx pin in reception mode */
 		CtrlPortRegisters.EnaRx = GPIO_PIN_RESET;
-		CtrlPortRegisters.EnaTx = GPIO_PIN_RESET;
-		HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, GPIO_PIN_RESET);
+		CtrlPortRegisters.EnaTx = GPIO_PIN_RESET;		
+		HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, CtrlPortRegisters.EnaRx);
+		HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, CtrlPortRegisters.EnaTx);
+		LL_USART_EnableDirectionRx(USART1);
+#endif
     /* Turn LED2 On at end of transfer : Tx sequence completed successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
-
-		LL_USART_EnableDirectionRx(USART1);
   }
 }
 
@@ -134,7 +134,7 @@ void USART1_TransmitComplete_Callback(void)
   */
 void USART1_TXEmpty_Callback(void)
 {
-  if(U1_idxTx == (RX_MESSAGE_SIZE - 1))
+  if(U1_idxTx >= (U1_TxMessageSize - 1))
   {
     /* Disable TXE interrupt */
     LL_USART_DisableIT_TXE(USART1);
@@ -154,23 +154,18 @@ void USART1_TXEmpty_Callback(void)
   */
 void USART1_Reception_Callback(void)
 {
-//	uint8_t *ptemp;
 	/* Read Received character. RXNE flag is cleared by reading of DR register */
 	pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
-
-  /* Checks if Buffer full indication has been set */
-//  if (U1_idxRx == RX_MESSAGE_SIZE - 1)
-//  {
-//    /* Swap buffers for next bytes to be received */
-////    ptemp = pBufferMessage;
-////    pBufferMessage = pBufferReception;
-////    pBufferReception = ptemp;
-//		
-//		/* Set Buffer swap indication */
-//    U1_BufferReadyIndication = 1;
-//		U1_idxRx = 0;
-//  }
-//	OS_Signal(&U1_RxSemaphore);
+	// check that we're not overflow buffer size
+	if(U1_idxRx >= (RX_BUFFER_SIZE - 1)){
+		U1_BufferReadyIndication = 1;
+	/* Save received data size */
+		U1_RxMessageSize = U1_idxRx;		
+	/* Initiliaze Buffer index to zero */		
+		U1_idxRx = 0;
+	/* Signal thread that data received */
+		OS_Signal(&U1_RxSemaphore);			
+	}
 }
 
 /**
@@ -181,11 +176,18 @@ void USART1_Reception_Callback(void)
   * @retval None
   */
 void USART1_IDLE_Callback(void){
-	U1_BufferReadyIndication = 1;
-	U1_RxMessageSize = U1_idxRx;
-	U1_idxRx = 0;
-	LL_USART_ClearFlag_IDLE(USART1);
-	OS_Signal(&U1_RxSemaphore);	
+	if(U1_idxRx >= 2){ // If recived 2 bytes or more, otherwise it uncomplete message   
+		/* Idle detected, Buffer full indication has been set */
+		U1_BufferReadyIndication = 1;
+		/* Save received data size */
+		U1_RxMessageSize = U1_idxRx;
+		/* Initiliaze Buffer index to zero */
+		U1_idxRx = 0;
+		/* Clear IDLE status */
+		LL_USART_ClearFlag_IDLE(USART1);
+		/* Signal thread that data received */
+		OS_Signal(&U1_RxSemaphore);
+	}		
 }
 
 /**

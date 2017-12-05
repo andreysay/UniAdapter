@@ -13,8 +13,9 @@
 #include "stdint.h"
 #include "stm32f1xx_hal.h"
 
-/* USER CODE BEGIN Includes */
-
+/**
+  * @}
+  */
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */

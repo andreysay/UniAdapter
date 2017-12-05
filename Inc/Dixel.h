@@ -17,5 +17,21 @@
 
 /* Private define ------------------------------------------------------------*/
 
+void MU_PortReceptionInit(void);
+
+void MU_PortHandleContinuousReception(void);
+
+void MU_PortSendMsg(void);
+
+void CtrlPortRxInit(void);
+
+void CtrlPortHandleContinuousReception(void);
+
+void CtrlPortTxInit(void);
+
+void CtrlPortSendMsg(void);
+
+void IdleTask(void);
+
 #endif /* __DIXEL_H */
 /************************ (C) COPYRIGHT *****END OF FILE****/

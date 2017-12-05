@@ -9,6 +9,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "Televis.h"
 
+#ifdef Eliwel
 uint8_t TelevisBuf[BUFLEN];
 uint32_t TelevisTimeIsExpired;
 extern TEvent Event;
@@ -182,5 +183,6 @@ void TelevisSend(TEvent *ev)
   ptr = 1;
 //  if(ev->debug == FARLOOP1) Modbus.Send(TelevisBuf, len);
 }
+#endif
 //-----------------------------------------------------------
 /************************ (C) COPYRIGHT *****END OF FILE****/

@@ -311,7 +311,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -484,6 +484,31 @@
               <FileName>ControllerPort.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Inc\ControllerPort.h</FilePath>
+            </File>
+            <File>
+              <FileName>Modbus.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\Modbus.h</FilePath>
+            </File>
+            <File>
+              <FileName>Modbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\Modbus.c</FilePath>
+            </File>
+            <File>
+              <FileName>ControllerType.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\ControllerType.h</FilePath>
+            </File>
+            <File>
+              <FileName>main_threads.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\main_threads.c</FilePath>
+            </File>
+            <File>
+              <FileName>main_threads.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\main_threads.h</FilePath>
             </File>
           </Files>
         </Group>

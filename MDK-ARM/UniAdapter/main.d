@@ -50,4 +50,8 @@ uniadapter\main.o: ../Inc/BSP.h
 uniadapter\main.o: ../Inc/ErrorHandler.h
 uniadapter\main.o: ../Inc/USART3.h
 uniadapter\main.o: ../Inc/USART1.h
+uniadapter\main.o: ../Inc/ControllerType.h
+uniadapter\main.o: ../Inc/Dixel.h
+uniadapter\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\main.o: ../Inc/ControllerPort.h
+uniadapter\main.o: ../Inc/main_threads.h

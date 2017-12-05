@@ -17,6 +17,8 @@
 "uniadapter\usart3.o"
 "uniadapter\televis.o"
 "uniadapter\controllerport.o"
+"uniadapter\modbus.o"
+"uniadapter\main_threads.o"
 "uniadapter\stm32f1xx_hal_cortex.o"
 "uniadapter\stm32f1xx_hal.o"
 "uniadapter\stm32f1xx_hal_rcc_ex.o"

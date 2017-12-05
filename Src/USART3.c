@@ -14,12 +14,14 @@
 #define USART3_BAUDRATE 9600
 #define APB_Div3 4
 	
-extern __IO uint32_t U3_idxTx; // defined in main.c file
-extern __IO uint32_t U3_idxRx; // defined in main.c file
-extern uint8_t U3_TXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
-extern uint8_t U3_RXBuffer[RX_BUFFER_SIZE]; // defined in main.c file
-extern __IO uint32_t     U3_BufferReadyIndication; // defined in main.c file
-extern uint8_t U3_TxMessageSize;
+extern __IO uint32_t U3_idxTx; // defined in Dixel.c file
+extern __IO uint32_t U3_idxRx; // defined in Dixel.c file
+extern uint8_t U3_TXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
+extern uint8_t U3_RXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
+extern __IO uint32_t     U3_BufferReadyIndication; // defined in Dixel.c file
+extern uint8_t U3_TxMessageSize;	// defined in Dixel.c file
+extern uint8_t U3_RxMessageSize;	// defined in Dixel.c file
+extern int32_t U3_RxSemaphore;	// defined in Dixel.c file
 
 //------------UART3_Init------------
 /**
@@ -81,7 +83,7 @@ void USART3_Init(void){
   /* Reset value is LL_USART_HWCONTROL_NONE */
   LL_USART_SetHWFlowCtrl(USART3, LL_USART_HWCONTROL_NONE);
 
-  /* Set Baudrate to 115200 using APB frequency set to 72000000/APB_Div Hz */
+  /* Set Baudrate to 9600 using APB frequency set to 72000000/APB_Div Hz */
   /* Frequency available for USART peripheral can also be calculated through LL RCC macro */
   /* Ex :
       Periphclk = LL_RCC_GetUSARTClockFreq(Instance); or LL_RCC_GetUARTClockFreq(Instance); depending on USART/UART instance
@@ -109,12 +111,10 @@ void USART3_TransmitComplete_Callback(void)
     LL_USART_DisableIT_TC(USART3);
 		/* Set DE pin to low level (TC interrupt is occured )*/
 		HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_RESET);
-    /* Turn LED2 On at end of transfer : Tx sequence completed successfully */
+    /* Turn LEDs Off at end of transfer : Tx sequence completed successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
-
+		OS_Signal(&U3_RxSemaphore);
   }
 }
 
@@ -148,14 +148,36 @@ void USART3_Reception_Callback(void)
 
   /* Read Received character. RXNE flag is cleared by reading of DR register */
   U3_RXBuffer[U3_idxRx++] = LL_USART_ReceiveData8(USART3);
-
-  /* Checks if Buffer full indication has been set */
-  if (U3_idxRx >= RX_MESSAGE_SIZE)
-  {
-		/* Set Buffer swap indication */
-    U3_BufferReadyIndication = 1;
+	// Check that we're not owerflow buffer size
+	if(U3_idxRx >= (RX_BUFFER_SIZE - 1)){
+		U3_BufferReadyIndication = 1;
+	/* Save received data size */
+		U3_RxMessageSize = U3_idxRx;		
+	/* Initiliaze Buffer index to zero */		
 		U3_idxRx = 0;
-  }
+		OS_Signal(&U3_RxSemaphore);
+	}
+}
+
+/**
+  * @brief  Function called from USART IRQ Handler when IDLE flag is set
+  *         Function is in charge of signal to main thread CtrlPortHandleContinuousReception
+  *					that reception of data has been end.
+  * @param  None
+  * @retval None
+  */
+void USART3_IDLE_Callback(void){
+	if(U3_idxRx >= 6){
+		/* Idle detected, Buffer full indication has been set */
+		U3_BufferReadyIndication = 1;
+		/* Save received data size */
+		U3_RxMessageSize = U3_idxRx;
+		/* Initiliaze Buffer index to zero */
+		U3_idxRx = 0;
+		/* Clear IDLE status */
+		LL_USART_ClearFlag_IDLE(USART3);
+		OS_Signal(&U3_RxSemaphore);
+	}		
 }
 
 /**
@@ -183,6 +205,13 @@ void USART3_IRQHandler(void)
 				and prepare next charcater transmission */
 		USART3_TransmitComplete_Callback();
   }
+	if(LL_USART_IsActiveFlag_IDLE(USART3) && LL_USART_IsEnabledIT_IDLE(USART3))   /* Check IDLE flag value in SR register */
+  {
+    /* IDLE flag will be cleared by a software sequence (an read to the
+				USART_SR register followed by a read to the USART_DR register (done in call) */
+    /* Call function in charge of handling Idle interrupt */
+		USART3_IDLE_Callback();
+  }	
   /* USER CODE END USART3_IRQn 0 */
 
   /* USER CODE BEGIN USART3_IRQn 1 */
