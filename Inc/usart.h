@@ -27,7 +27,6 @@
 #endif /* USE_FULL_ASSERT */
 #include "StartUP.h"
 #include "os.h"
-#include "FIFO.h"
 #include "main.h"
 
 /* USER CODE BEGIN Includes */

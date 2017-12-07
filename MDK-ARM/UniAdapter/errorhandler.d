@@ -42,5 +42,4 @@ uniadapter\errorhandler.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_pwr.
 uniadapter\errorhandler.o: ../Inc/stm32_assert.h
 uniadapter\errorhandler.o: ../Inc/StartUP.h
 uniadapter\errorhandler.o: ../Inc/os.h
-uniadapter\errorhandler.o: ../Inc/FIFO.h
 uniadapter\errorhandler.o: ../Inc/ErrorHandler.h

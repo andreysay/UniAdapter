@@ -50,16 +50,14 @@ void BSP_PeriodicTask_Init(void(*task)(void), uint32_t freq, uint8_t priority){l
        + Prescaler = (SystemCoreClock/10000) - 1
        + ClockDivision = 0
        + Counter direction = Up
-	Update rate = TIM counter clock / (Period + 1) = 1 Hz,
+	Update rate = TIM counter clock / (Period + 1) = 10 Hz,
   */
 	
 
-//	uwPrescalerValue = (uint32_t)(SystemCoreClock / (freq * 1000)) - 1;
 	uwPrescalerValue = (uint32_t)(SystemCoreClock / (freq * 10)) - 1;
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = uwPrescalerValue;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-//  htim4.Init.Period = freq * 1000 - 1;	
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;	
 	htim4.Init.Period = 10 - 1;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -283,24 +281,3 @@ void BSP_Time_Init(void){long sr;
   EndCritical(sr);
 }
 
-// ------------BSP_Time_Get------------
-// Return the system time in microseconds, which is the
-// number of 32-bit timer counts since the timer was
-// initialized.  This will work properly for at least 71
-// minutes after which it could roll over.
-// Input: none
-// Output: system time in microseconds
-// Assumes: BSP_Time_Init() has been called
-uint32_t BSP_Time_Get(void){
-  // 2*32/1,000,000 = 4,294 seconds, about 71 minutes
-  return 1;
-}
-
-// ------------BSP_Delay1ms------------
-// Simple delay function which delays about n
-// milliseconds.
-// Inputs: n  number of 1 msec to wait
-// Outputs: none
-void BSP_Delay1ms(uint32_t n){
-	HAL_Delay(1);
-}

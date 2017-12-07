@@ -451,11 +451,6 @@
               <FilePath>..\Src\BSP.c</FilePath>
             </File>
             <File>
-              <FileName>FIFO.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\FIFO.c</FilePath>
-            </File>
-            <File>
               <FileName>tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\tim.c</FilePath>

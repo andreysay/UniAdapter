@@ -10,10 +10,13 @@
 #include "usart.h"
 #include "ErrorHandler.h"
 #include "USART3.h"
+#include "os.h"
 
 #define USART3_BAUDRATE 9600
-#define APB_Div3 4
-	
+#define APB_Div3 2
+
+#define stop_U3_idle   __breakpoint(1)
+#define stop_U3_TransmitComplete __breakpoint(2)
 extern __IO uint32_t U3_idxTx; // defined in Dixel.c file
 extern __IO uint32_t U3_idxRx; // defined in Dixel.c file
 extern uint8_t U3_TXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
@@ -104,6 +107,9 @@ void USART3_Init(void){
   */
 void USART3_TransmitComplete_Callback(void)
 {
+#ifdef DEBUGVIEW
+	if(U3_idxTx < 3) stop_U3_TransmitComplete;
+#endif
 	if(U3_idxTx >= U3_TxMessageSize)
   { 
 		U3_idxTx = 0;
@@ -114,7 +120,7 @@ void USART3_TransmitComplete_Callback(void)
     /* Turn LEDs Off at end of transfer : Tx sequence completed successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
-		OS_Signal(&U3_RxSemaphore);
+		OS_Signal(&U3_RxSemaphore); // Signal semaphore to start accept new request from MU Port
   }
 }
 
@@ -149,13 +155,8 @@ void USART3_Reception_Callback(void)
   /* Read Received character. RXNE flag is cleared by reading of DR register */
   U3_RXBuffer[U3_idxRx++] = LL_USART_ReceiveData8(USART3);
 	// Check that we're not owerflow buffer size
-	if(U3_idxRx >= (RX_BUFFER_SIZE - 1)){
-		U3_BufferReadyIndication = 1;
-	/* Save received data size */
-		U3_RxMessageSize = U3_idxRx;		
-	/* Initiliaze Buffer index to zero */		
+	if(U3_idxRx >= (RX_BUFFER_SIZE - 1)){	
 		U3_idxRx = 0;
-		OS_Signal(&U3_RxSemaphore);
 	}
 }
 
@@ -167,7 +168,12 @@ void USART3_Reception_Callback(void)
   * @retval None
   */
 void USART3_IDLE_Callback(void){
-	if(U3_idxRx >= 6){
+#ifdef DEBUGVIEW	
+	if(U3_idxRx < 6){
+		stop_U3_idle;
+	}
+#endif
+	if(U3_idxRx >= 6 && U3_idxRx < RX_BUFFER_SIZE){
 		/* Idle detected, Buffer full indication has been set */
 		U3_BufferReadyIndication = 1;
 		/* Save received data size */
@@ -177,6 +183,8 @@ void USART3_IDLE_Callback(void){
 		/* Clear IDLE status */
 		LL_USART_ClearFlag_IDLE(USART3);
 		OS_Signal(&U3_RxSemaphore);
+	}	else {
+		U3_idxRx = 0;
 	}		
 }
 

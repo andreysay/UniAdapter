@@ -44,7 +44,6 @@ uniadapter\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_pwr.h
 uniadapter\main.o: ../Inc/stm32_assert.h
 uniadapter\main.o: ../Inc/StartUP.h
 uniadapter\main.o: ../Inc/os.h
-uniadapter\main.o: ../Inc/FIFO.h
 uniadapter\main.o: ../Inc/gpio.h
 uniadapter\main.o: ../Inc/BSP.h
 uniadapter\main.o: ../Inc/ErrorHandler.h

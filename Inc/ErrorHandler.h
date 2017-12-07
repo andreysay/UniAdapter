@@ -20,6 +20,10 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
+void LED_Init(void);	 
+	 
+void LED_ErrorBlinking(uint32_t Period);	 
+	 
 void _Error_Handler(char *, int);
 	 
 /**

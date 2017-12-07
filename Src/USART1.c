@@ -121,9 +121,11 @@ void USART1_TransmitComplete_Callback(void)
 		HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, CtrlPortRegisters.EnaTx);
 		LL_USART_EnableDirectionRx(USART1);
 #endif
-    /* Turn LED2 On at end of transfer : Tx sequence completed successfully */
+    /* Turn ORANGE Off at end of transfer : Tx sequence completed successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
+		/* Initializes Buffer indication : */
+		U1_BufferReadyIndication = 0;
   }
 }
 
@@ -154,17 +156,16 @@ void USART1_TXEmpty_Callback(void)
   */
 void USART1_Reception_Callback(void)
 {
-	/* Read Received character. RXNE flag is cleared by reading of DR register */
+		/* Read Received character. RXNE flag is cleared by reading of DR register */
 	pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
+
 	// check that we're not overflow buffer size
 	if(U1_idxRx >= (RX_BUFFER_SIZE - 1)){
 		U1_BufferReadyIndication = 1;
 	/* Save received data size */
 		U1_RxMessageSize = U1_idxRx;		
 	/* Initiliaze Buffer index to zero */		
-		U1_idxRx = 0;
-	/* Signal thread that data received */
-		OS_Signal(&U1_RxSemaphore);			
+		U1_idxRx = 0;		
 	}
 }
 
@@ -183,11 +184,11 @@ void USART1_IDLE_Callback(void){
 		U1_RxMessageSize = U1_idxRx;
 		/* Initiliaze Buffer index to zero */
 		U1_idxRx = 0;
-		/* Clear IDLE status */
-		LL_USART_ClearFlag_IDLE(USART1);
 		/* Signal thread that data received */
 		OS_Signal(&U1_RxSemaphore);
-	}		
+	}
+		/* Clear IDLE status */
+	LL_USART_ClearFlag_IDLE(USART1);	
 }
 
 /**

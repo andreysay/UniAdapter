@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "stm32f1xx_hal.h"
+#include "stm32f1xx_ll_cortex.h"
 #include "stm32f1xx_ll_rcc.h"
 #include "stm32f1xx_ll_system.h"
 #include "stm32f1xx_ll_utils.h"
@@ -10,10 +11,12 @@
 
 
 #define INTCTRL         (*((volatile uint32_t *)0xE000ED04))
-	
+
+/* Private define ------------------------------------------------------------*/
 #define NUMTHREADS  20       // maximum number of threads
 #define NUMPERIODIC 2        // maximum number of periodic threads
 #define STACKSIZE   100      // number of 32-bit words in stack per thread
+
 
 // Thread data type
 struct tcb{
@@ -48,7 +51,7 @@ void static runperiodicevents(void);
 // input:  none
 // output: none
 void OS_Init(void){
-  DisableInterrupts();
+	DisableInterrupts();
   SystemClock_Config();// set processor clock to fastest speed
 	NumThread=0;  // number of threads
   ThreadId=0;   // thread Ids are sequential from 1
@@ -61,25 +64,13 @@ void OS_Init(void){
 // Inputs: number of clock cycles for each time slice
 //         (maximum of 24 bits)
 // Outputs: none (does not return)
-void OS_Launch(uint32_t theTimeSlice){
-//	SysTick->CTRL = 0;		// Disable SysTick during setup
-//	SysTick->LOAD = theTimeSlice - 1;
-//	SysTick->VAL = 0;
-//	NVIC_SetPriority(PendSV_IRQn, 0x07);
-//	NVIC_SetPriority(SysTick_IRQn, 0x07);
-//	SysTick->CTRL = 0x7;
-    /**Configure the Systick interrupt time 
-    */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-
-    /**Configure the Systick 
-    */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-
+void OS_Launch(void){
+  /* Set Systick to 1ms in using frequency set to SystemCoreClock */
+  LL_Init1msTick(SystemCoreClock);
   /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 7, 7);	
+  NVIC_SetPriority(SysTick_IRQn, 7);
 	/* PendSV_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(PendSV_IRQn, 7, 7);	
+  NVIC_SetPriority(PendSV_IRQn, 7);	
   StartOS();                   // start on the first task
 }
 
@@ -174,7 +165,7 @@ void Scheduler(void){      // every time slice
 		}
 	} while(RunPt != pt); // look at all possible threads
 	RunPt = bestPt;
-  
+//  RunPt->Priority = 250; // this thread will not run untill this activated by OS_Signal
 }
 
 //******** OS_Suspend ***************
@@ -288,15 +279,16 @@ void OS_Signal(int32_t *semPt){
 		while(pt->BlockPt != semPt){
 			pt = pt->next;
 		}
-		pt->BlockPt = 0;
+		pt->BlockPt = 0; // wakeup this one
+//		pt->Priority = 0; // Run that thread in next Scheduler call
 	}
 	EnableInterrupts();
 }
 
-#define FSIZE 10    // can be any size
+#define FSIZE 32    // can be any size
 uint32_t PutI;      // index of where to put next
 uint32_t GetI;      // index of where to get next
-uint32_t Fifo[FSIZE];
+uint8_t Fifo[FSIZE];
 int32_t CurrentSize;// 0 means FIFO empty, FSIZE means full
 uint32_t LostData;  // number of lost pieces of data
 
@@ -407,47 +399,46 @@ void OS_PeriodTrigger1_Init(int32_t *semaPt, uint32_t period){
   BSP_PeriodicTask_Init(&RealTimeEvents,1000,0);
 }
 
-/** System Clock Configuration
-*/
+
+/**
+  * @brief  System Clock Configuration
+  *         The system Clock is configured as follow :
+  *            System Clock source            = PLL (HSE)
+  *            SYSCLK(Hz)                     = 72000000
+  *            HCLK(Hz)                       = 72000000
+  *            AHB Prescaler                  = 1
+  *            APB1 Prescaler                 = 2
+  *            APB2 Prescaler                 = 1
+  *            HSE Frequency(Hz)              = 8000000
+  *            PLLMUL                         = 9
+  *            Flash Latency(WS)              = 2
+  * @param  None
+  * @retval None
+  */
+/* Variable to store PLL parameters */
+/* Configuration will allow to reach a SYSCLK frequency set to 72MHz: 
+   Syst freq = ((HSE_VALUE / LL_RCC_PLLSOURCE_HSI_DIV_1) * LL_RCC_PLL_MUL_9)
+               ((8MHz /1) * 9)             = 72MHz                     */
+LL_UTILS_PLLInitTypeDef sUTILS_PLLInitStruct = {LL_RCC_PLL_MUL_9, LL_RCC_PREDIV_DIV_1};
+
+/* Variable to store AHB and APB buses clock configuration */
+/* Settings to have HCLK set to 72MHz, APB1 to 36MHz and APB2 to 72MHz */
+LL_UTILS_ClkInitTypeDef sUTILS_ClkInitStruct = {LL_RCC_SYSCLK_DIV_1, LL_RCC_APB1_DIV_2, LL_RCC_APB2_DIV_1};
+
 void SystemClock_Config(void)
 {
+  /* System started with default clock used after reset */
+  /* Set FLASH latency */
+  LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
 
-  RCC_OscInitTypeDef RCC_OscInitStruct;
-  RCC_ClkInitTypeDef RCC_ClkInitStruct;
-  RCC_PeriphCLKInitTypeDef PeriphClkInit;
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
+  /* Switch to PLL with HSI as clock source             */
+  LL_PLL_ConfigSystemClock_HSE(HSE_VALUE, LL_UTILS_HSEBYPASS_OFF, &sUTILS_PLLInitStruct, &sUTILS_ClkInitStruct);
+  
+  /* 
+     CMSIS variable automatically updated according to new configuration.
+     SystemCoreClock should be equal to calculated HCLK frequency.
+     FLASH latency is also tuned according to system constraints described 
+     in the reference manual.           
+  */
 }
+

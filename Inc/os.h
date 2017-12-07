@@ -2,6 +2,11 @@
 #ifndef __OS_H
 #define __OS_H
 
+
+/** System Clock Configuration
+*/
+void SystemClock_Config(void);
+
 // ******** OS_Init ************
 // Initialize operating system, disable interrupts
 // Initialize OS controlled I/O: periodic interrupt, bus clock as fast as possible
@@ -27,10 +32,10 @@ uint32_t OS_Id(void);
 
 //******** OS_Launch ***************
 // Start the scheduler, enable interrupts
-// Inputs: number of clock cycles for each time slice
+// Inputs: none
 // Outputs: none (does not return)
 // Errors: theTimeSlice must be less than 16,777,216
-void OS_Launch(uint32_t theTimeSlice);
+void OS_Launch(void);
 
 //******** OS_Suspend ***************
 // Called by main thread to cooperatively suspend operation

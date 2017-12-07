@@ -41,7 +41,6 @@ uniadapter\usart1.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_pwr.h
 uniadapter\usart1.o: ../Inc/stm32_assert.h
 uniadapter\usart1.o: ../Inc/StartUP.h
 uniadapter\usart1.o: ../Inc/os.h
-uniadapter\usart1.o: ../Inc/FIFO.h
 uniadapter\usart1.o: ../Inc/ErrorHandler.h
 uniadapter\usart1.o: ../Inc/USART1.h
 uniadapter\usart1.o: ../Inc/ControllerPort.h

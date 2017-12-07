@@ -48,8 +48,8 @@ int32_t CtrlRxTimeIsNotExpired = 1;
 __IO uint32_t U1_idxTx = 0;
 __IO uint32_t U1_idxRx = 0;
 
-uint8_t U1_RXBufferA[RX_MESSAGE_SIZE];
-//uint8_t U1_RXBufferB[RX_MESSAGE_SIZE];
+uint8_t U1_RXBufferA[RX_BUFFER_SIZE];
+
 uint8_t U1_TXBuffer[RX_BUFFER_SIZE];
 __IO uint32_t     U1_BufferReadyIndication;
 uint8_t U1_RxMessageSize = 0;
@@ -81,7 +81,7 @@ void MU_PortReceptionInit(void)
 
 		/* Enable RXNE and Error interrupts */
 		LL_USART_EnableIT_RXNE(USART3);
-		LL_USART_EnableIT_ERROR(USART3);
+		LL_USART_EnableIT_ERROR(USART3);		
 		OS_Signal(&U3_RxSemaphore);
 		Count0++;
 	}
@@ -91,7 +91,7 @@ uint32_t Count1;
 void MU_PortHandleContinuousReception(void)
 {
 	Count1 = 0;
-	uint8_t i;
+	uint8_t i = 0;
 	while(1){
 		OS_Wait(&U3_RxSemaphore);
   /* Checks if Buffer full indication has been set */
@@ -106,17 +106,14 @@ void MU_PortHandleContinuousReception(void)
 				U1_TXBuffer[i] = U3_RXBuffer[i];
 				U3_RXBuffer[i] = 0;
 			}
-			/* Turn on orange led, indication that data from monitor unit received */	
+			/* Turn on green led, indication that data from monitor unit received */	
 			HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
 			// Enable interrupts
 			EnableInterrupts();
 			OS_Signal(&PortCtrlTxInitSema);
-			OS_Wait(&U3_RxSemaphore);
 		}
-//		OS_Signal(&U3_RxSemaphore);
 		Count1++;
 	}
 }
@@ -131,11 +128,13 @@ void MU_PortSendMsg(void){
 		if(pinDirState != GPIO_PIN_SET){
 			HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_SET);
 		}
+		/* Turn LEDs On at start of transfer : Tx started */
+		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
 		/* Fill DR with a new char */
 		LL_USART_TransmitData8(USART3, U3_TXBuffer[U3_idxTx++]);
 		/* Enable TXE interrupt */
 		LL_USART_EnableIT_TXE(USART3); 
-//		OS_Signal(&U3_RxSemaphore);
 		Count2++;
 	}
 }
@@ -146,8 +145,6 @@ void CtrlPortRxInit(void)
 	Count7 = 0;
 	while(1){
 		OS_Wait(&PortCtrlRxInitSema);
-		/* Initializes Buffer indication : */
-		U1_BufferReadyIndication = 0;
 		/* Initializes time expiration semaphore */
 		CtrlRxTimeIsNotExpired = 5;
 		/* Initialize index to move on buffer */
@@ -170,7 +167,7 @@ void CtrlPortHandleContinuousReception(void)
 	Count8 = 0;
 	uint8_t i;
 	while(1){
-		if(CtrlRxTimeIsNotExpired){ // If time not expired
+//		if(CtrlRxTimeIsNotExpired){ // If time not expired
 			OS_Wait(&U1_RxSemaphore); // Will signal from USART1_IDLE_Callback function in USART1.c driven by interrupt
 			/* Checks if Buffer full indication has been set */			
 			if (U1_BufferReadyIndication != 0)
@@ -189,12 +186,11 @@ void CtrlPortHandleContinuousReception(void)
 				HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
 				EnableInterrupts();
 				OS_Signal(&U3_TxSemaphore);
-				OS_Wait(&U1_RxSemaphore);
-			}			
-		} else {
-			OS_Signal(&U3_RxInitSema); // Signal USART3 receive new data
-			OS_Wait(&U1_RxSemaphore);
-		}
+			} 
+//		} else {
+//			OS_Signal(&U3_RxInitSema); // If reception time is expired, signal USART3 receive new data
+//			OS_Wait(&U1_RxSemaphore);
+//		}
 		Count8++;
 	}
 }
@@ -226,10 +222,13 @@ void CtrlPortSendMsg(void){
 #ifdef RS485
 		LL_USART_DisableDirectionRx(USART1);
 #endif
+		/* Turn ORANGE On at start of transfer : Tx sequence started successfully */
+		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
 		LL_USART_TransmitData8(USART1, U1_TXBuffer[U1_idxTx++]);
 		/* Enable TXE interrupt */
-		LL_USART_EnableIT_TXE(USART1); 
-		OS_Signal(&PortCtrlRxInitSema);
+		LL_USART_EnableIT_TXE(USART1);
+		OS_Signal(&PortCtrlRxInitSema); // Signal semaphore to initialize data reception		
 		Count6++;
 	}
 }

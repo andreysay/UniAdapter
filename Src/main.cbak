@@ -71,7 +71,7 @@ void EventThread100ms(void){
 	Count3 = 0;
 	while(1){
 		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
-//		while(CtrlRxTimeIsNotExpired){ CtrlRxTimeIsNotExpired--; };
+		while(CtrlRxTimeIsNotExpired){ CtrlRxTimeIsNotExpired--; };
 		Count3++;
 	};
 }
@@ -98,6 +98,8 @@ int main(void)
 
   /* USER CODE END 1 */
   /* MCU Configuration----------------------------------------------------------*/
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+//  HAL_Init();
   /* USER CODE BEGIN Init */
 	OS_Init();            // initialize, disable interrupts
   /* USER CODE END Init */
@@ -111,8 +113,8 @@ int main(void)
 	USART1_Init();
 	USART3_Init();
   MX_ADC1_Init();
-//  MX_TIM4_Init();
-//  MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM3_Init();
 	CtrlPortRegistersInit();
   /* USER CODE BEGIN 2 */
 
@@ -131,20 +133,20 @@ int main(void)
 	
 	
 	OS_AddThread(&MU_PortReceptionInit, 2);
-	OS_AddThread(&MU_PortHandleContinuousReception, 3);
+	OS_AddThread(&MU_PortHandleContinuousReception, 2);
 	
 	OS_AddThread(&CtrlPortTxInit, 2);	
-	OS_AddThread(&CtrlPortSendMsg, 3);
+	OS_AddThread(&CtrlPortSendMsg, 2);
 	
 	OS_AddThread(&CtrlPortRxInit, 2);
-	OS_AddThread(&CtrlPortHandleContinuousReception, 3);
+	OS_AddThread(&CtrlPortHandleContinuousReception, 2);
 	
-	OS_AddThread(&MU_PortSendMsg, 0);
+	OS_AddThread(&MU_PortSendMsg, 2);
 	
-	OS_AddThread(&EventThread100ms, 4);
-	OS_AddThread(&EventThread1sec, 4);
+	OS_AddThread(&EventThread100ms, 2);
+	OS_AddThread(&EventThread1sec, 2);
 	OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
-	OS_Launch(); // doesn't return, interrupts enabled in here
+	OS_Launch(BSP_Clock_GetFreq()/THREADFREQ); // doesn't return, interrupts enabled in here
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -152,8 +154,6 @@ int main(void)
   {
 //			stop_cpu;// Should not be here
 		_Error_Handler(__FILE__, __LINE__);
-		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
   }
 
 }

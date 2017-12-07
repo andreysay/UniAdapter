@@ -87,6 +87,34 @@ void USARTxError_Callback(USART_TypeDef* USARTx)
   }
 }
 
+void LED_ErrorBlinking(uint32_t Period)
+{
+  /* Turn RED on */
+  LL_GPIO_SetOutputPin(GPIO_LED_RED, LED_RED_PIN);
+  
+  /* Toggle IO in an infinite loop */
+  while (1)
+  {
+    /* Error if LED is slowly blinking (1 sec. period) */
+    LL_GPIO_TogglePin(GPIO_LED_RED, LED_RED_PIN);  
+    LL_mDelay(Period);
+  }
+}
+
+/**
+  * @brief  Initialize LED2.
+  * @param  None
+  * @retval None
+  */
+void LED_Init(void)
+{
+  /* Enable the LED2 Clock */
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+
+  /* Configure IO in output push-pull mode to drive external LED2 */
+  LL_GPIO_SetPinMode(GPIO_LED_RED, LED_RED_PIN, LL_GPIO_MODE_OUTPUT);
+}
+
 
 /* USER CODE BEGIN 1 */
 
