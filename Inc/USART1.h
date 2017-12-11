@@ -4,6 +4,7 @@
  /* Includes ------------------------------------------------------------------*/
 
 
+/* USER CODE BEGIN Private defines */
 /* USART1 instance is used. (TX on PA.09, RX on PA.10)
    (requires wiring USART1 TX/Rx Pins to USB to UART adapter) */
 #define USARTx_INSTANCE               USART1
@@ -18,6 +19,8 @@
 #define USARTx_RX_GPIO_PORT           GPIOA
 #define USARTx_BAUDRATE 9600
 #define APB_Div1 1
+
+/* USER CODE END Private defines */
 
 //------------UART_Init------------
 // Initialize the UART for 9,600 baud rate (assuming 72 MHz clock),

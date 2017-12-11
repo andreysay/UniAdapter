@@ -12,19 +12,17 @@
 #include "USART3.h"
 #include "os.h"
 
-#define USART3_BAUDRATE 9600
-#define APB_Div3 2
-
 #define stop_U3_idle   __breakpoint(1)
 #define stop_U3_TransmitComplete __breakpoint(2)
-extern __IO uint32_t U3_idxTx; // defined in Dixel.c file
-extern __IO uint32_t U3_idxRx; // defined in Dixel.c file
-extern uint8_t U3_TXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
-extern uint8_t U3_RXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
-extern __IO uint32_t     U3_BufferReadyIndication; // defined in Dixel.c file
-extern uint8_t U3_TxMessageSize;	// defined in Dixel.c file
-extern uint8_t U3_RxMessageSize;	// defined in Dixel.c file
-extern int32_t U3_RxSemaphore;	// defined in Dixel.c file
+
+extern __IO uint32_t U3_idxTx; // defined in main_threads.c file
+extern __IO uint32_t U3_idxRx; // defined in main_threads.c file
+extern uint8_t *U3_pBufferTransmit; // defined in main_threads.c file
+extern uint8_t *U3_pBufferReception; // defined in main_threads.c file
+extern __IO uint32_t     U3_BufferReadyIndication; // defined in main_threads.c file
+extern uint8_t U3_TxMessageSize;	// defined in main_threads.c file
+extern uint8_t U3_RxMessageSize;	// defined in main_threads.c file
+extern int32_t U3_RxSemaphore;	// defined in main_threads.c file
 
 //------------UART3_Init------------
 /**
@@ -140,7 +138,7 @@ void USART_TXEmpty_Callback(void)
     LL_USART_EnableIT_TC(USART3);
   }
   /* Fill DR with a new char */
-  LL_USART_TransmitData8(USART3, U3_TXBuffer[U3_idxTx++]);
+  LL_USART_TransmitData8(USART3, U3_pBufferTransmit[U3_idxTx++]);
 }
 
 /**
@@ -153,7 +151,7 @@ void USART3_Reception_Callback(void)
 {
 
   /* Read Received character. RXNE flag is cleared by reading of DR register */
-  U3_RXBuffer[U3_idxRx++] = LL_USART_ReceiveData8(USART3);
+  U3_pBufferReception[U3_idxRx++] = LL_USART_ReceiveData8(USART3);
 	// Check that we're not owerflow buffer size
 	if(U3_idxRx >= (RX_BUFFER_SIZE - 1)){	
 		U3_idxRx = 0;

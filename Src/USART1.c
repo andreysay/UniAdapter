@@ -12,19 +12,15 @@
 #include "USART1.h"
 #include "ControllerPort.h"
 	
-extern int32_t U1_TxSemaphore; // defined in Dixel.c file
-extern int32_t U1_RxSemaphore; // defined in Dixel.c file
-extern int32_t PortCtrlRxInitSema;
-extern __IO uint32_t U1_idxTx; // defined in Dixel.c file
-extern uint8_t U1_TXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
-// extern uint8_t U1_RXBuffer[RX_BUFFER_SIZE]; // defined in Dixel.c file
-extern uint8_t *pBufferMessage;
-extern uint8_t *pBufferReception;
-extern __IO uint32_t U1_idxRx; // defined in Dixel.c file
-extern __IO uint32_t     U1_BufferReadyIndication; // defined in Dixel.c file
+extern int32_t U1_RxSemaphore; // defined in main_threads.c file
+extern __IO uint32_t U1_idxTx; // defined in main_threads.c file
+extern uint8_t *U1_pBufferTransmit; // defined in main_threads.c file
+extern uint8_t *U1_pBufferReception; // defined in main_threads.c file
+extern __IO uint32_t U1_idxRx; // defined in main_threads.c file
+extern __IO uint32_t     U1_BufferReadyIndication; // defined in main_threads.c file
 extern CtrlPortReg CtrlPortRegisters;	// defined in ControllerPort.c
-extern uint8_t U1_RxMessageSize; // defined in Dixel.c file
-extern uint8_t U1_TxMessageSize; // defined in Dixel.c file
+extern __IO uint8_t U1_RxMessageSize; // defined in main_threads.c file
+extern uint8_t U1_TxMessageSize; // defined in main_threads.c file
 
 
 //------------UART1_Init------------
@@ -42,7 +38,7 @@ extern uint8_t U1_TxMessageSize; // defined in Dixel.c file
   * @retval None
   */
 // Initialize the UART1 for 9,600 baud rate (assuming 72 MHz clock),
-// 8 bit word length, no parity bits, one stop bit
+// 8 bit word length, no parity bits, two stop bit
 // Input: none
 // Output: none
 void USART1_Init(void){
@@ -145,7 +141,7 @@ void USART1_TXEmpty_Callback(void)
     LL_USART_EnableIT_TC(USART1);
   }
   /* Fill DR with a new char */
-  LL_USART_TransmitData8(USART1, U1_TXBuffer[U1_idxTx++]);
+  LL_USART_TransmitData8(USART1, U1_pBufferTransmit[U1_idxTx++]);
 }
 
 /**
@@ -157,7 +153,7 @@ void USART1_TXEmpty_Callback(void)
 void USART1_Reception_Callback(void)
 {
 		/* Read Received character. RXNE flag is cleared by reading of DR register */
-	pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
+	U1_pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
 
 	// check that we're not overflow buffer size
 	if(U1_idxRx >= (RX_BUFFER_SIZE - 1)){

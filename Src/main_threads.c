@@ -15,48 +15,61 @@
 #include "ControllerPort.h"
 
 // USART3 MU_Port semaphores
-// Semaphore for transmit
-int32_t U3_RxSemaphore;
 // Semaphore for reception
+int32_t U3_RxSemaphore;
+// Semaphore for transmition
 int32_t U3_TxSemaphore;
 // Semaphore for reception initialisation
 int32_t U3_RxInitSema;
 
 /**
-  * @brief RX buffers for storing received data through USART3
+  * @brief RX/TX buffers for storing received data through USART3
   */
 uint8_t U3_RXBuffer[RX_BUFFER_SIZE];
 uint8_t U3_TXBuffer[RX_BUFFER_SIZE];
-
+//Pointer to U3_RXBuffer used in USART3.c USART3_Reception_Callback function to handle data reception
+uint8_t *U3_pBufferReception = NULL;
+//Pointer to U3_TXBuffer used in USART3.c USART3_TXEmpty_Callback function to handle data transmission
+uint8_t *U3_pBufferTransmit = NULL;
+// RX buffer ready indication
 __IO uint32_t     U3_BufferReadyIndication;
 // index to move on buffer U3_TXBuffer[]
 __IO uint32_t U3_idxTx = 0;
 // index to move on buffer U3_RXBuffer[]
 __IO uint32_t U3_idxRx = 0;
+// Tx/Rx message size variable
 uint8_t U3_TxMessageSize = 0;
 uint8_t U3_RxMessageSize = 0;
+
+// USART1 controller port semaphores
+// Semaphore for Controller port TX mode initialisation
+int32_t PortCtrlTxInitSema;
+// Semaphore for Controller port RX mode initialisation
+int32_t PortCtrlRxInitSema;
+// Semaphore for transmition
+int32_t U1_TxSemaphore;
+// Semaphore for reception
+int32_t U1_RxSemaphore;
 
 /**
   * @brief RX/TX buffers and semaphores for storing received data through USART1
   */
-// Semaphore for Controller port initialisation
-int32_t PortCtrlTxInitSema;
-int32_t PortCtrlRxInitSema;
-int32_t U1_TxSemaphore;
-int32_t U1_RxSemaphore;
-int32_t CtrlRxTimeIsNotExpired = 1;
+uint8_t U1_RXBufferA[RX_BUFFER_SIZE];
+uint8_t U1_TXBuffer[RX_BUFFER_SIZE];
+// RX buffer ready indication
+__IO uint32_t     U1_BufferReadyIndication;
+// Tx/Rx message size variable
+__IO uint8_t U1_RxMessageSize = 0;
+uint8_t U1_TxMessageSize = 0;
+// index to move on buffer U1_TXBuffer[]
 __IO uint32_t U1_idxTx = 0;
+// index to move on buffer U1_RXBufferA[]
 __IO uint32_t U1_idxRx = 0;
 
-uint8_t U1_RXBufferA[RX_BUFFER_SIZE];
-
-uint8_t U1_TXBuffer[RX_BUFFER_SIZE];
-__IO uint32_t     U1_BufferReadyIndication;
-uint8_t U1_RxMessageSize = 0;
-uint8_t U1_TxMessageSize = 0;
-
-//uint8_t *pBufferMessage;
-uint8_t *pBufferReception;
+//Pointer to U1_RXBufferA used in USART1 USART1_Reception_Callback function to handle data reception
+uint8_t *U1_pBufferReception = NULL;
+//Pointer to U1_TXBuffer used in USART1 USART1_TXEmpty_Callback function to handle data transmission
+uint8_t *U1_pBufferTransmit = NULL;
 
 // Counters for debugging
 uint32_t Count0;
@@ -74,6 +87,9 @@ void MU_PortReceptionInit(void)
 		U3_idxRx = 0;
 		// Initialize buffer ready indication
 		U3_BufferReadyIndication = 0;
+		// buffers pointers initialization
+		U3_pBufferReception = &U3_RXBuffer[0];
+		U3_pBufferTransmit = &U3_TXBuffer[0];
 		/* Enable IDLE */
 		LL_USART_EnableIT_IDLE(USART3);
 		/* Clear Overrun flag, in case characters have already been sent to USART */
@@ -145,11 +161,10 @@ void CtrlPortRxInit(void)
 	Count7 = 0;
 	while(1){
 		OS_Wait(&PortCtrlRxInitSema);
-		/* Initializes time expiration semaphore */
-		CtrlRxTimeIsNotExpired = 5;
 		/* Initialize index to move on buffer */
 		U1_idxRx = 0;
-		pBufferReception 		= U1_RXBufferA;
+		// buffer pointer initialization
+		U1_pBufferReception = &U1_RXBufferA[0];
 		/* Enable IDLE */
 		LL_USART_EnableIT_IDLE(USART1);
 		/* Enable RXNE */
@@ -167,7 +182,6 @@ void CtrlPortHandleContinuousReception(void)
 	Count8 = 0;
 	uint8_t i;
 	while(1){
-//		if(CtrlRxTimeIsNotExpired){ // If time not expired
 			OS_Wait(&U1_RxSemaphore); // Will signal from USART1_IDLE_Callback function in USART1.c driven by interrupt
 			/* Checks if Buffer full indication has been set */			
 			if (U1_BufferReadyIndication != 0)
@@ -186,11 +200,7 @@ void CtrlPortHandleContinuousReception(void)
 				HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
 				EnableInterrupts();
 				OS_Signal(&U3_TxSemaphore);
-			} 
-//		} else {
-//			OS_Signal(&U3_RxInitSema); // If reception time is expired, signal USART3 receive new data
-//			OS_Wait(&U1_RxSemaphore);
-//		}
+			}
 		Count8++;
 	}
 }
@@ -201,6 +211,8 @@ void CtrlPortTxInit(void)
 	Count5 = 0;
 	while(1){
 		OS_Wait(&PortCtrlTxInitSema);
+		// buffer pointer initialization
+		U1_pBufferTransmit = &U1_TXBuffer[0];
 		if(!LL_USART_IsEnabledIT_ERROR(USART1)){
 				/* Enable Error interrupt */
 			LL_USART_EnableIT_ERROR(USART1);
