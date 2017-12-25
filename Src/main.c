@@ -22,30 +22,28 @@
 #include "ControllerType.h"
 #include "ControllerPort.h"
 #include "main_threads.h"
+#include "Televis.h"
+#include "Modbus.h"
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-char string[20];  // global to assist in debugging
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 /* it can be changed to while(1) if needed */
 #define stop_cpu   __breakpoint(0)
-#define THREADFREQ 1000   // frequency in Hz
 
 // Counters for debugging
 uint32_t Count3, Count4;
-// Semaphore for controller scan
-int32_t DeviceScan;
 
-// RxLed - green light
+// Semaphore for periodic thread which runs every 100ms
 int32_t Time100msSemaphore;
-// TxLed - orange light
+// Semaphore for periodic thread which runs every 1 second
 int32_t Time1secSemaphore;
 
-extern int32_t CtrlRxTimeIsNotExpired;
+/* Semaphores defined in main_threads.c file */
 // Semaphore for transmit
 extern int32_t U3_RxSemaphore;
 // Semaphore for reception
@@ -59,6 +57,20 @@ extern int32_t PortCtrlRxInitSema;
 extern int32_t U1_TxSemaphore;
 extern int32_t U1_RxSemaphore;
 
+// link to Televis.c file
+extern int32_t TelevisHndlReceiveSema;
+extern int32_t TelevisPortTxInitSema;
+extern int32_t TelevisPortRxInitSema;
+extern int32_t TelevisCtrlScanSema;
+extern int32_t TelevisHndlSendSema;
+
+// link to Modbus.c file
+extern int32_t ModbusSendSema;
+extern int32_t ModbusHndlReceiveSema;
+extern int32_t ModbusPortTxInitSema;
+
+uint32_t ControllerType = Unknown;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,7 +83,6 @@ void EventThread100ms(void){
 	Count3 = 0;
 	while(1){
 		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
-//		while(CtrlRxTimeIsNotExpired){ CtrlRxTimeIsNotExpired--; };
 		Count3++;
 	};
 }
@@ -84,6 +95,7 @@ void EventThread1sec(void){
 		Count4++;
 	};
 }
+
 
 /* USER CODE END PFP */
 
@@ -99,7 +111,7 @@ int main(void)
   /* USER CODE END 1 */
   /* MCU Configuration----------------------------------------------------------*/
   /* USER CODE BEGIN Init */
-	OS_Init();            // initialize, disable interrupts
+	SystemClock_Config();// set processor clock to fastest speed
   /* USER CODE END Init */
 
   /* USER CODE BEGIN SysInit */
@@ -110,48 +122,116 @@ int main(void)
   MX_GPIO_Init();
 	USART1_Init();
 	USART3_Init();
-  MX_ADC1_Init();
-//  MX_TIM4_Init();
-//  MX_TIM3_Init();
-	CtrlPortRegistersInit();
-  /* USER CODE BEGIN 2 */
+  /* Configure ADC */
+  /* Note: This function configures the ADC but does not enable it.           */
+  /*       To enable it, use function "Activate_ADC()".                       */
+  /*       This is intended to optimize power consumption:                    */
+  /*       1. ADC configuration can be done once at the beginning             */
+  /*          (ADC disabled, minimal power consumption)                       */
+  /*       2. ADC enable (higher power consumption) can be done just before   */
+  /*          ADC conversions needed.                                         */
+  /*          Then, possible to perform successive "Activate_ADC()",          */
+  /*          "Deactivate_ADC()", ..., without having to set again            */
+  /*          ADC configuration.                                              */
+  Configure_ADC();
+  
+  /* Activate ADC */
+  /* Perform ADC activation procedure to make it ready to convert. */
+  Activate_ADC();
+	// Detect input voltage from CFG pin
+	ControllerTypeDetection();
+	// Disable ADC conversion
+	Disable_ADC();
+	
+	OS_Init();            // initialize, disable interrupts
+	/* USER CODE BEGIN 2 */
+	switch(ControllerType){
+		case Dixel:
+			Dixel_Init();
 
-	OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
-	OS_PeriodTrigger1_Init(&Time1secSemaphore, 500);
-	OS_InitSemaphore(&U3_RxInitSema, 1);
-	OS_InitSemaphore(&U3_RxSemaphore, 0);
-	OS_InitSemaphore(&U3_TxSemaphore, 0);
-	OS_InitSemaphore(&Time100msSemaphore, 0);
-	OS_InitSemaphore(&Time1secSemaphore, 0);
+			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
+			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
+			OS_InitSemaphore(&U3_RxInitSema, 1);
+			OS_InitSemaphore(&U3_RxSemaphore, 0);
+			OS_InitSemaphore(&U3_TxSemaphore, 0);
+			OS_InitSemaphore(&Time100msSemaphore, 0);
+			OS_InitSemaphore(&Time1secSemaphore, 0);	
+			OS_InitSemaphore(&PortCtrlRxInitSema, 0);
+			OS_InitSemaphore(&U1_RxSemaphore, 0);
+			OS_InitSemaphore(&PortCtrlTxInitSema, 0);
+			OS_InitSemaphore(&U1_TxSemaphore, 0);
 	
-	OS_InitSemaphore(&PortCtrlRxInitSema, 0);
-	OS_InitSemaphore(&U1_RxSemaphore, 0);
-	OS_InitSemaphore(&PortCtrlTxInitSema, 0);
-	OS_InitSemaphore(&U1_TxSemaphore, 0);
+			OS_AddThread(&MU_PortReceptionInit, 2);
+			OS_AddThread(&MU_PortHandleContinuousReception, 3);
+		
+			OS_AddThread(&CtrlPortTxInit, 2);	
+			OS_AddThread(&CtrlPortSendMsg, 3);
+		
+			OS_AddThread(&CtrlPortRxInit, 2);
+			OS_AddThread(&CtrlPortHandleContinuousReception, 3);
+			OS_AddThread(&MU_PortSendMsg, 0);
+			OS_AddThread(&EventThread100ms, 4);
+			OS_AddThread(&EventThread1sec, 4);
+			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
+			OS_Launch(); // doesn't return, interrupts enabled in here
+			break;
+		case Eliwell:
+			Dixel_Init();
+			TelevisTIM2TimeInit();
+			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
+			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
+			OS_InitSemaphore(&TelevisCtrlScanSema, 1);
+			OS_InitSemaphore(&TelevisPortTxInitSema, 0);
+			OS_InitSemaphore(&U1_TxSemaphore, 0);		
+			OS_InitSemaphore(&TelevisPortRxInitSema, 0);
+			OS_InitSemaphore(&U1_RxSemaphore, 0);
+			OS_InitSemaphore(&TelevisHndlReceiveSema, 0);		
+			OS_InitSemaphore(&ModbusSendSema, 0);
+			OS_InitSemaphore(&ModbusPortTxInitSema, 0);
+			OS_InitSemaphore(&U3_TxSemaphore, 0);
+			OS_InitSemaphore(&U3_RxSemaphore, 0);
+			OS_InitSemaphore(&ModbusHndlReceiveSema, 0);
+			OS_InitSemaphore(&TelevisHndlSendSema, 0);
+			OS_InitSemaphore(&Time100msSemaphore, 0);
+			OS_InitSemaphore(&Time1secSemaphore, 0);	
+
+
 	
-	
-	OS_AddThread(&MU_PortReceptionInit, 2);
-	OS_AddThread(&MU_PortHandleContinuousReception, 3);
-	
-	OS_AddThread(&CtrlPortTxInit, 2);	
-	OS_AddThread(&CtrlPortSendMsg, 3);
-	
-	OS_AddThread(&CtrlPortRxInit, 2);
-	OS_AddThread(&CtrlPortHandleContinuousReception, 3);
-	
-	OS_AddThread(&MU_PortSendMsg, 0);
-	
-	OS_AddThread(&EventThread100ms, 4);
-	OS_AddThread(&EventThread1sec, 4);
-	OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
-	OS_Launch(); // doesn't return, interrupts enabled in here
+			OS_AddThread(&TelevisScan, 1);
+		
+			OS_AddThread(&TelevisPortTxInit, 2);
+			OS_AddThread(&TelevisPortSendMsg, 3);
+			OS_AddThread(&TelevisSend, 3);			
+		
+			OS_AddThread(&TelevisPortRxInit, 2);
+			OS_AddThread(&TelevisPortReception, 3);
+			OS_AddThread(&TelevisHndlReceive, 3);
+			
+			OS_AddThread(&ModbusPortRxInit, 2);
+			OS_AddThread(&ModbusPortReception, 3);
+			OS_AddThread(&ModbusHndlReceive, 3);
+			
+			OS_AddThread(&ModbusSend, 3);
+			OS_AddThread(&ModbusPortTxInit, 2);
+			OS_AddThread(ModbusPortSendMsg, 3);
+
+			OS_AddThread(&TelevisEventThread100ms, 4);
+			OS_AddThread(&TelevisEventThread1sec, 4);
+			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
+			OS_Launch(); // doesn't return, interrupts enabled in here			
+			break;
+		default:
+			EnableInterrupts();
+			LED_ErrorBlinking(LED_BLINK_ERROR);
+	}
   /* USER CODE END 2 */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//			stop_cpu;// Should not be here
-		_Error_Handler(__FILE__, __LINE__);
+#ifdef DEBUGVIEW		
+		stop_cpu;// Should not be here
+#endif
 		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
   }

@@ -476,24 +476,9 @@
               <FilePath>..\Src\ControllerPort.c</FilePath>
             </File>
             <File>
-              <FileName>ControllerPort.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Inc\ControllerPort.h</FilePath>
-            </File>
-            <File>
-              <FileName>Modbus.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Inc\Modbus.h</FilePath>
-            </File>
-            <File>
               <FileName>Modbus.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\Modbus.c</FilePath>
-            </File>
-            <File>
-              <FileName>ControllerType.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Inc\ControllerType.h</FilePath>
             </File>
             <File>
               <FileName>main_threads.c</FileName>
@@ -501,9 +486,14 @@
               <FilePath>..\Src\main_threads.c</FilePath>
             </File>
             <File>
-              <FileName>main_threads.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Inc\main_threads.h</FilePath>
+              <FileName>ControllerType.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ControllerType.c</FilePath>
+            </File>
+            <File>
+              <FileName>LED.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\LED.c</FilePath>
             </File>
           </Files>
         </Group>

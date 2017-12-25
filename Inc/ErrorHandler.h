@@ -20,6 +20,13 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
+/**
+  * @brief Toggle periods for various blinking modes, 0 <= period <= 9
+  */
+#define LED_BLINK_FAST  2
+#define LED_BLINK_SLOW  5
+#define LED_BLINK_ERROR 9	 
+	 
 void LED_Init(void);	 
 	 
 void LED_ErrorBlinking(uint32_t Period);	 

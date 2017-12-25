@@ -31,8 +31,7 @@ uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim
 uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 uniadapter\main_threads.o: ../Inc/ControllerType.h
-uniadapter\main_threads.o: ../Inc/Dixel.h
-uniadapter\main_threads.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\main_threads.o: ../Inc/StartUp.h
 uniadapter\main_threads.o: ../Inc/os.h
 uniadapter\main_threads.o: ../Inc/ControllerPort.h
+uniadapter\main_threads.o: ../Inc/LED.h

@@ -42,4 +42,5 @@ uniadapter\usart3.o: ../Inc/stm32_assert.h
 uniadapter\usart3.o: ../Inc/StartUP.h
 uniadapter\usart3.o: ../Inc/os.h
 uniadapter\usart3.o: ../Inc/ErrorHandler.h
+uniadapter\usart3.o: ../Inc/LED.h
 uniadapter\usart3.o: ../Inc/USART3.h

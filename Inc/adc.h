@@ -4,37 +4,6 @@
   * Description        : This file provides code for the configuration
   *                      of the ADC instances.
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
-  *
-  * COPYRIGHT(c) 2017 STMicroelectronics
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __adc_H
@@ -44,22 +13,81 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f1xx_hal.h"
-#include "main.h"
+#include "stm32f1xx_ll_bus.h"
+#include "stm32f1xx_ll_rcc.h"
+#include "stm32f1xx_ll_system.h"
+#include "stm32f1xx_ll_utils.h"
+#include "stm32f1xx_ll_cortex.h"
+#include "stm32f1xx_ll_gpio.h"
+#include "stm32f1xx_ll_exti.h"
+#include "stm32f1xx_ll_adc.h"
+#include "stm32f1xx_ll_pwr.h"
+#if defined(USE_FULL_ASSERT)
+#include "stm32_assert.h"
+#endif /* USE_FULL_ASSERT */
 
-/* USER CODE BEGIN Includes */
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
 
-/* USER CODE END Includes */
+/* Define used to enable time-out management*/
+#define USE_TIMEOUT       0
+/* Definitions of ADC hardware constraints delays */
+/* Note: Only ADC IP HW delays are defined in ADC LL driver driver,           */
+/*       not timeout values:                                                  */
+/*       Timeout values for ADC operations are dependent to device clock      */
+/*       configuration (system clock versus ADC clock),                       */
+/*       and therefore must be defined in user application.                   */
+/*       Refer to @ref ADC_LL_EC_HW_DELAYS for description of ADC timeout     */
+/*       values definition.                                                   */
 
-extern ADC_HandleTypeDef hadc1;
+  /* Timeout values for ADC operations. */
+  /* (enable settling time, disable settling time, ...)                       */
+  /* Values defined to be higher than worst cases: low clock frequency,       */
+  /* maximum prescalers.                                                      */
+  /* Example of profile very low frequency : ADC clock frequency 12MHz        */
+  /* prescaler 6, sampling time 1.5 ADC clock cycles, resolution 12 bits.     */
+  /*  - ADC enable time: maximum delay is 1 us                                */
+  /*    (refer to device datasheet, parameter "tSTAB")                        */
+  /*  - ADC disable time: maximum delay should be a few ADC clock cycles      */
+  /*  - ADC stop conversion time: maximum delay should be a few ADC clock     */
+  /*    cycles                                                                */
+  /*  - ADC conversion time: with this hypothesis of clock settings, maximum  */
+  /*    delay will be 7us.                                                   */
+  /*    (refer to device reference manual, section "Timing")                  */
+  /* Unit: ms                                                                 */
+  #define ADC_CALIBRATION_TIMEOUT_MS       ((uint32_t)   1)
+  #define ADC_ENABLE_TIMEOUT_MS            ((uint32_t)   1)
+  #define ADC_DISABLE_TIMEOUT_MS           ((uint32_t)   1)
+  #define ADC_STOP_CONVERSION_TIMEOUT_MS   ((uint32_t)   1)
+  #define ADC_CONVERSION_TIMEOUT_MS        ((uint32_t)   2)
+  
+  /* Delay between ADC enable and ADC end of calibration.                     */
+  /* Delay estimation in CPU cycles: Case of ADC calibration done             */
+  /* immediately after ADC enable, ADC clock setting slow                     */
+  /* (LL_ADC_CLOCK_ASYNC_DIV32). Use a higher delay if ratio                  */
+  /* (CPU clock / ADC clock) is above 32.                                     */
+  #define ADC_DELAY_ENABLE_CALIB_CPU_CYCLES  (LL_ADC_DELAY_ENABLE_CALIB_ADC_CYCLES * 32)
+  
 
-/* USER CODE BEGIN Private defines */
+/* Definitions of environment analog values */
+  /* Value of analog reference voltage (Vref+), connected to analog voltage   */
+  /* supply Vdda (unit: mV).                                                  */
+  #define VDDA_APPLI                       ((uint32_t)3300)
 
-/* USER CODE END Private defines */
+/* Definitions of data related to this example */
+  /* Init variable out of expected ADC conversion data range */
+  #define VAR_CONVERTED_DATA_INIT_VALUE    (__LL_ADC_DIGITAL_SCALE(LL_ADC_RESOLUTION_12B) + 1)
 
 extern void _Error_Handler(char *, int);
 
-void MX_ADC1_Init(void);
+void Configure_ADC(void);
+
+void Activate_ADC(void);
+
+void Disable_ADC(void);
+
+/* IRQ Handler treatment */
+void AdcGrpRegularUnitaryConvComplete_Callback(void);
 
 /* USER CODE BEGIN Prototypes */
 

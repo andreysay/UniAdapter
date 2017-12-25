@@ -11,41 +11,31 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdbool.h>
+#include "Command.h"
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
-#define CMD03    0x03
-#define CMD06    0x06
-#define CMD10    0x10
-#define CMD43    0x2B
-#define CMD73    0x73
-#define CMD76    0x76
-#define SCAN     0xD6
-#define DEBUG    0xD6
-#define ADDR     0xDD
-#define FARLOOP1 1
-#define FARLOOP2 2
-#define NEARLOOP 3
-#define BROADCAST 254
-#define BUFLEN 32
-#define REPLYCNTR 10
 
 //----------------------------------------------
 typedef struct ModbusCmd //Read Holding Regs
 {
   uint8_t addr;//Device addr
   uint8_t cmd;//Cmd=0x03
-  uint32_t reg;//Reg addr
-  uint32_t num;//Regs num
+  uint8_t regHi;//Reg Hi number addr
+	uint8_t regLo;//Reg Lo number addr
+  uint8_t regNumH;//Data Hi number
+	uint8_t regNumL;//Data Lo number
 }ModbusCmd;
 typedef struct ModbusReply03
 {
   uint8_t addr;//Device addr
   uint8_t cmd;//Cmd=0x03
   uint8_t len;//Bytes len
+//	uint8_t lenLo;
   uint8_t data;//Data Hi MSB first
+//	uint8_t dataLo;
 }ModbusReply03;
 
 typedef struct ModbusCmd06 //Write Reg
@@ -80,8 +70,21 @@ typedef struct ModbusReply10
   uint32_t num;//Regs num written, usually 0x0001, MSB first
 }ModbusReply10;
 
-bool ModbusReceive(uint8_t *data);
+/* Private function prototypes -----------------------------------------------*/
 
-bool TModbusReceive(TEvent *ev);
+void ModbusPortRxInit(void);
+
+void ModbusPortReception(void);
+
+void ModbusPortTxInit(void);
+
+void ModbusPortSendMsg(void);
+
+void ModbusHndlReceive(void);
+
+void ModbusSend(void);
+
+
+
 #endif /* __MODBUS_H */
 /************************ (C) COPYRIGHT *****END OF FILE****/

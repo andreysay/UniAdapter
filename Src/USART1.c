@@ -9,8 +9,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
 #include "ErrorHandler.h"
+#include "LED.h"
 #include "USART1.h"
 #include "ControllerPort.h"
+#include "ControllerType.h"
 	
 extern int32_t U1_RxSemaphore; // defined in main_threads.c file
 extern __IO uint32_t U1_idxTx; // defined in main_threads.c file
@@ -21,6 +23,9 @@ extern __IO uint32_t     U1_BufferReadyIndication; // defined in main_threads.c 
 extern CtrlPortReg CtrlPortRegisters;	// defined in ControllerPort.c
 extern __IO uint8_t U1_RxMessageSize; // defined in main_threads.c file
 extern uint8_t U1_TxMessageSize; // defined in main_threads.c file
+extern uint32_t ControllerType;
+
+__IO uint8_t Televis1stByteFlag = 1;
 
 
 //------------UART1_Init------------
@@ -118,10 +123,10 @@ void USART1_TransmitComplete_Callback(void)
 		LL_USART_EnableDirectionRx(USART1);
 #endif
     /* Turn ORANGE Off at end of transfer : Tx sequence completed successfully */
-		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
+		LEDs_off();
 		/* Initializes Buffer indication : */
 		U1_BufferReadyIndication = 0;
+		Televis1stByteFlag = 1;
   }
 }
 
@@ -152,6 +157,10 @@ void USART1_TXEmpty_Callback(void)
   */
 void USART1_Reception_Callback(void)
 {
+	if(!U1_idxRx){
+		/* Turn GREEN led on, indication that data from controller received */
+		LED_GreenOn();
+	}
 		/* Read Received character. RXNE flag is cleared by reading of DR register */
 	U1_pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
 

@@ -62,6 +62,10 @@ extern void _Error_Handler(char *, int);
 
 void MX_TIM3_Init(void);
 void MX_TIM4_Init(void);
+// Configure TIM2 for handle LED error blinking
+void  Configure_TIM2TimeBase(uint32_t TIMx_Freq, uint32_t TIMx_UpFreq);
+
+void SetTIM2_Period(uint32_t Period);
 
 /* USER CODE BEGIN Prototypes */
 

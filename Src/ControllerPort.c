@@ -12,17 +12,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define Dixel 1
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
 CtrlPortReg CtrlPortRegisters;
-#ifdef Eliwel
-	TEvent Event;
-	bool DeviceFound = false;
-	uint8_t ReplyCntr;
-#endif
 
 
 void RS485_Init(void){
@@ -49,15 +43,6 @@ void Dixel_Init(void){
 	HAL_GPIO_WritePin(GPIO_EnaB, PIN_EnaB, CtrlPortRegisters.EnaB);
 	HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, CtrlPortRegisters.EnaRx);
 	HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, CtrlPortRegisters.EnaTx);
-}
-
-void CtrlPortRegistersInit(void){
-#ifdef RS485
-	RS485_Init();
-#endif
-#ifdef Dixel
-	Dixel_Init();
-#endif
 }
 
 void CtrlPortRegistersTxInit(void){

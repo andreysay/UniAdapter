@@ -18,6 +18,8 @@
 "uniadapter\controllerport.o"
 "uniadapter\modbus.o"
 "uniadapter\main_threads.o"
+"uniadapter\controllertype.o"
+"uniadapter\led.o"
 "uniadapter\stm32f1xx_hal_cortex.o"
 "uniadapter\stm32f1xx_hal.o"
 "uniadapter\stm32f1xx_hal_rcc_ex.o"

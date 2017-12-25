@@ -52,7 +52,6 @@ void static runperiodicevents(void);
 // output: none
 void OS_Init(void){
 	DisableInterrupts();
-  SystemClock_Config();// set processor clock to fastest speed
 	NumThread=0;  // number of threads
   ThreadId=0;   // thread Ids are sequential from 1
 	// set up periodic timer to run runperiodicevents to implement sleeping
@@ -431,7 +430,7 @@ void SystemClock_Config(void)
   /* Set FLASH latency */
   LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
 
-  /* Switch to PLL with HSI as clock source             */
+  /* Switch to PLL with HSE as clock source             */
   LL_PLL_ConfigSystemClock_HSE(HSE_VALUE, LL_UTILS_HSEBYPASS_OFF, &sUTILS_PLLInitStruct, &sUTILS_ClkInitStruct);
   
   /* 
@@ -440,5 +439,7 @@ void SystemClock_Config(void)
      FLASH latency is also tuned according to system constraints described 
      in the reference manual.           
   */
+	 /* Set Systick to 1ms in using frequency set to SystemCoreClock */
+  LL_Init1msTick(SystemCoreClock);
 }
 

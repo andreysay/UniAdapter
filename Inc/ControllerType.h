@@ -13,26 +13,15 @@
 #include "stdint.h"
 #include "stm32f1xx_hal.h"
 
-#define Dixel
+#define Dixel 1
+#define Eliwell 2
+#define Unknown 65535
+#define LED_ADC_BLINK_ERROR 3
 
 /* USER CODE BEGIN Includes */
 /** @addtogroup Controller_Included
   * @{
   */
-
-#if defined(Eliwel)
-  #include "Televis.h"
-#elif defined(Carel)
-  #include "Carel.h"
-#elif defined(Modbus)
-  #include "Modbus.h"
-#elif defined(Dixel)
-  #include "Dixel.h"
-#elif defined(Evco)
-  #include "Evco.h"
-#else
- #error "Please select first the target controller device used in your application (in ControllerPort.h file)"
-#endif
 
 /**
   * @}
@@ -40,10 +29,19 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
-
+typedef struct TEvent
+{
+  uint8_t ev_addr;
+  uint8_t ev_cmd;
+  uint32_t ev_reg;
+  uint8_t *dataptr;
+  uint8_t ev_len;
+  uint8_t ev_debug;
+  uint8_t ev_size;
+} TEvent;
 /* USER CODE END Private defines */
 
-
+void ControllerTypeDetection(void);
 
 
 

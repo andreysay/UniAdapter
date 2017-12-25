@@ -13,6 +13,7 @@
 #include "StartUp.h"
 #include "os.h"
 #include "ControllerPort.h"
+#include "LED.h"
 
 // USART3 MU_Port semaphores
 // Semaphore for reception
@@ -182,7 +183,7 @@ void CtrlPortHandleContinuousReception(void)
 	Count8 = 0;
 	uint8_t i;
 	while(1){
-			OS_Wait(&U1_RxSemaphore); // Will signal from USART1_IDLE_Callback function in USART1.c driven by interrupt
+			OS_Wait(&U1_RxSemaphore);
 			/* Checks if Buffer full indication has been set */			
 			if (U1_BufferReadyIndication != 0)
 			{
@@ -194,10 +195,7 @@ void CtrlPortHandleContinuousReception(void)
 					U3_TXBuffer[i] = U1_RXBufferA[i];
 					U1_RXBufferA[i] = 0;
 				}
-				/* Turn on green led, indication that data from controller received */
-				HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
-				HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
-				HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
+				LEDs_off();
 				EnableInterrupts();
 				OS_Signal(&U3_TxSemaphore);
 			}

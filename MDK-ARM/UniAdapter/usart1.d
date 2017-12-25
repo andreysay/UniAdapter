@@ -42,5 +42,7 @@ uniadapter\usart1.o: ../Inc/stm32_assert.h
 uniadapter\usart1.o: ../Inc/StartUP.h
 uniadapter\usart1.o: ../Inc/os.h
 uniadapter\usart1.o: ../Inc/ErrorHandler.h
+uniadapter\usart1.o: ../Inc/LED.h
 uniadapter\usart1.o: ../Inc/USART1.h
 uniadapter\usart1.o: ../Inc/ControllerPort.h
+uniadapter\usart1.o: ../Inc/ControllerType.h

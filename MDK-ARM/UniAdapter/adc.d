@@ -1,9 +1,6 @@
 uniadapter\adc.o: ../Src/adc.c
 uniadapter\adc.o: ../Inc/adc.h
-uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
-uniadapter\adc.o: ../Inc/stm32f1xx_hal_conf.h
-uniadapter\adc.o: ../Inc/main.h
-uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h
 uniadapter\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 uniadapter\adc.o: ../Drivers/CMSIS/Include/core_cm3.h
@@ -13,6 +10,10 @@ uniadapter\adc.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 uniadapter\adc.o: ../Drivers/CMSIS/Include/core_cmFunc.h
 uniadapter\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+uniadapter\adc.o: ../Inc/stm32f1xx_hal_conf.h
+uniadapter\adc.o: ../Inc/main.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
+uniadapter\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
 uniadapter\adc.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
@@ -30,4 +31,14 @@ uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_rcc.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_system.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_utils.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_cortex.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_gpio.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_exti.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_adc.h
+uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_pwr.h
+uniadapter\adc.o: ../Inc/stm32_assert.h
 uniadapter\adc.o: ../Inc/gpio.h
+uniadapter\adc.o: ../Inc/StartUp.h

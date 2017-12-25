@@ -38,10 +38,14 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f1xx_ll_bus.h"
+#include "stm32f1xx_ll_tim.h"
+#include "stm32f1xx_ll_rcc.h"
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-
+/* Number of time base frequencies */
+#define TIM_BASE_FREQ_NB 10
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim3;
@@ -49,6 +53,15 @@ TIM_HandleTypeDef htim4;
 
 /* Prescaler declaration */
 static uint32_t uwPrescalerValue = 0;
+
+/* Initial autoreload value */
+static uint32_t InitialAutoreload = 0;
+
+/* Actual autoreload value multiplication factor */
+static uint8_t AutoreloadMult = 1;
+
+/* TIM2 Clock */
+static uint32_t TimOutClock = 1;
 
 /* TIM3 init function */
 void MX_TIM3_Init(void)
@@ -185,7 +198,78 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+/**
+  * @brief  Configures the timer as a time base.
+  * @note   Peripheral configuration is minimal configuration from reset values.
+  *         Thus, some useless LL unitary functions calls below are provided as
+  *         commented examples - setting is default configuration from reset.
+  * @param  None
+  * @retval None
+  */
+void  Configure_TIM2TimeBase(uint32_t TIMx_Freq, uint32_t TIMx_UpFreq)
+{
+  /* Enable the timer peripheral clock */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2); 
+  
+  /* Set counter mode */
+  /* Reset value is LL_TIM_COUNTERMODE_UP */
+  //LL_TIM_SetCounterMode(TIM2, LL_TIM_COUNTERMODE_UP);
 
+  /* Set the pre-scaler value to have TIM2 counter clock equal to 10 kHz      */
+  /*
+    In this example TIM2 input clock (TIM2CLK)  is set to APB1 clock (PCLK1),
+    since APB1 prescaler is equal to 1.
+      TIM2CLK = PCLK1
+      PCLK1 = HCLK
+      => TIM2CLK = HCLK = SystemCoreClock
+    To get TIM2 counter clock at 10 KHz, the Prescaler is computed as following:
+    Prescaler = (TIM2CLK / TIM2 counter clock) - 1
+    Prescaler = (SystemCoreClock /10 KHz) - 1
+  */
+  LL_TIM_SetPrescaler(TIM2, __LL_TIM_CALC_PSC(SystemCoreClock, TIMx_Freq));
+  
+  /* Set the auto-reload value to have an initial update event frequency of 10 Hz */
+    /* TIM2CLK = SystemCoreClock / (APB prescaler & multiplier)                 */
+  TimOutClock = SystemCoreClock;
+  
+  InitialAutoreload = __LL_TIM_CALC_ARR(TimOutClock, LL_TIM_GetPrescaler(TIM2), TIMx_UpFreq);
+  LL_TIM_SetAutoReload(TIM2, InitialAutoreload);
+  
+  /* Enable the update interrupt */
+  LL_TIM_EnableIT_UPDATE(TIM2);
+  
+  /* Configure the NVIC to handle TIM2 update interrupt */
+  NVIC_SetPriority(TIM2_IRQn, 0);
+  NVIC_EnableIRQ(TIM2_IRQn);
+  
+  /* Enable counter */
+  LL_TIM_EnableCounter(TIM2);
+  
+  /* Force update generation */
+  LL_TIM_GenerateEvent_UPDATE(TIM2);
+}
+
+/**
+  * @brief  Update the timer update event period
+  * @param  Num of periods, one period 100ms
+  * @retval None
+  */
+void SetTIM2_Period(uint32_t Period)
+{
+  /* Change the update event period by modifying the autoreload value.        */
+  /* In up-counting update event is generated at each counter overflow (when  */
+  /* the counter reaches the auto-reload value).                              */
+  /* Update event period is calculated as follows:                            */
+  /*   Update_event = TIM2CLK /((PSC + 1)*(ARR + 1)*(RCR + 1))                */
+  /*   where TIM2CLK is 72 MHz                                                */
+//  AutoreloadMult = AutoreloadMult % TIM_BASE_FREQ_NB;
+	AutoreloadMult = Period % TIM_BASE_FREQ_NB;
+  LL_TIM_SetAutoReload(TIM2, InitialAutoreload * (AutoreloadMult + 1));
+
+  /* Force update generation */
+  LL_TIM_GenerateEvent_UPDATE(TIM2);
+
+}
 /* USER CODE END 1 */
 
 /**
