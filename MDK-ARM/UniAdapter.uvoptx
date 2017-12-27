@@ -150,25 +150,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>161</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134231532</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\Src\USART3.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\UniAdapter\../Src/USART3.c\161</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
           <LineNumber>80</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134219812</Address>
+          <Address>134219810</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -475,6 +459,16 @@
           <count>58</count>
           <WinNumber>1</WinNumber>
           <ItemText>Count9</ItemText>
+        </Ww>
+        <Ww>
+          <count>59</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>Count10</ItemText>
+        </Ww>
+        <Ww>
+          <count>60</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>ErrorCMDModbuslog</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>

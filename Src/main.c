@@ -197,7 +197,7 @@ int main(void)
 
 
 	
-			OS_AddThread(&TelevisScan, 1);
+			OS_AddThread(&TelevisScan, 2);
 		
 			OS_AddThread(&TelevisPortTxInit, 2);
 			OS_AddThread(&TelevisPortSendMsg, 3);
@@ -205,7 +205,7 @@ int main(void)
 		
 			OS_AddThread(&TelevisPortRxInit, 2);
 			OS_AddThread(&TelevisPortReception, 3);
-			OS_AddThread(&TelevisHndlReceive, 3);
+			OS_AddThread(&TelevisHndlReceive, 2);
 			
 			OS_AddThread(&ModbusPortRxInit, 2);
 			OS_AddThread(&ModbusPortReception, 3);
@@ -238,10 +238,10 @@ int main(void)
 
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
+//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+//{
 
-}
+//}
 
 #ifdef USE_FULL_ASSERT
 

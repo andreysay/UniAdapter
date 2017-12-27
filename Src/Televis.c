@@ -21,18 +21,18 @@
 #include "LED.h"
 #include "Televis.h"
 
-// Televis symbols
-#define header 		0 // SOF place, number in message
-#define cmd				1 // cmd place
-#define sender		2 // sender address place
-#define receiver	3 // receiver address place
-#define len				4 // lenght of data for transmition, place
-#define regH			5 // register address value place MSB
-#define regL			6 // register address value place LSB
-#define data			7 // lenght of data for responce, place
-#define id				8 // id transaction place
+// Televis indexes symbols
+#define header 		0 // SOF(header) index
+#define cmd				1 // cmd index
+#define sender		2 // sender address index
+#define receiver	3 // receiver address index
+#define len				4 // lenght of data for transmition index
+#define regH			5 // register address value index MSB
+#define regL			6 // register address value index LSB
+#define data			7 // lenght of data for responce index
+#define id				8 // id transaction index
 
-#define SOF 0x82		// Televis start of frame(header)
+#define SOF 0x82		// Televis start of frame(SOF (header))
 
 
 /* Private macro -------------------------------------------------------------*/
@@ -97,6 +97,8 @@ int32_t TelevisPortTxInitSema;
 int32_t TelevisPortRxInitSema;
 
 int32_t TelevisCtrlScanSema;
+
+uint32_t ErrorCMDTelevislog;
 
 uint8_t TelevisMessageSize;
 
@@ -246,107 +248,81 @@ void TelevisHndlReceive(void)
 {
   uint32_t crc;
   uint8_t msg_cmd, data_len, *crcptr, msg_len;
+	TelevisReadReply *trr = (TelevisReadReply*)TelevisBuf;
 	
-  TelevisReadReply *trr = (TelevisReadReply*)TelevisBuf;
 	while(1){
 		OS_Wait(&TelevisHndlReceiveSema);
-		DisableInterrupts();
-#ifdef DEBUGVIEW		
-		DebugTelevisBuf[9]  = TelevisMessageSize;
-		DebugTelevisBuf[10] = TelevisMessageSize - 2;
-		DebugTelevisBuf[11] = ev->ev_cmd;
-		DebugTelevisBuf[12] = trr->t_header;
-		DebugTelevisBuf[13] = trr->t_sender;
-		DebugTelevisBuf[14] = trr->t_len - 2;
-#endif
 		msg_len = TelevisMessageSize;
 		data_len = TelevisMessageSize - 2;
 		msg_cmd = ev->ev_cmd;
 		TelevisMessageSize = 0;
-		if(trr->t_header != 0x82){
-			if(DeviceFound){
-				_Error_Handler(__FILE__, __LINE__);//wrong header
-			} else {
-				OS_Signal(&TelevisCtrlScanSema);
-				OS_Wait(&TelevisHndlReceiveSema);
-			}
-		}
-		if(trr->t_sender != ev->ev_addr){
-			if(DeviceFound){
-				_Error_Handler(__FILE__, __LINE__);
-			} else {
-				OS_Signal(&TelevisCtrlScanSema);
-				OS_Wait(&TelevisHndlReceiveSema);//wrong addr
-			}
-		}
-		//--------------------------------
-		//82  13  44  31  03  00 00  C2   FE 30 - read response
-		//Hdr Cmd Src Dst Len Id     Data Crc
-		if( (msg_cmd==CMD03) || (msg_cmd==CMD73) )//Read response
-		{
-			if (trr->t_cmd != 0x13 || msg_len < 10){
-				_Error_Handler(__FILE__, __LINE__);//short message
-			}
-			ev->ev_len = trr->t_len - 2;
-			ev->dataptr = &trr->t_data;
-			crcptr = &TelevisBuf[data_len];//pointer to crc in the message
-			crc = TelevisCrc16(TelevisBuf, data_len);//calculate crc
+		crcptr = &TelevisBuf[data_len];//pointer to crc in the message
+		crc = TelevisCrc16(TelevisBuf, data_len);//calculate crc
 #ifdef DEBUGVIEW
-			DebugTelevisBuf[15] = crc;
+		DebugTelevisBuf[9] = *crcptr;
+		DebugTelevisBuf[10] = *(crcptr+1);
+		DebugTelevisBuf[11] = crc;
+		DebugTelevisBuf[12]  = TelevisMessageSize;
+		DebugTelevisBuf[13] = TelevisMessageSize - 2;
+		DebugTelevisBuf[14] = ev->ev_cmd;
+		DebugTelevisBuf[15] = trr->t_header;
+		DebugTelevisBuf[16] = trr->t_sender;
+		DebugTelevisBuf[17] = trr->t_len - 2;		
 #endif
-		}
-		//--------------------------------
-		//82  05  44  31  00  FF 03 - write response
-		//Hdr Cmd Src Dst Len Crc
-		else if( msg_cmd==CMD06 || msg_cmd==CMD10 || (msg_cmd==CMD76) )//Write response
-		{
-			if (trr->t_cmd != 0x05 || msg_len < 7){
-				_Error_Handler(__FILE__, __LINE__);//short message
+		if(	trr->t_header == 0x82 && ( (crc >> 8) == (*crcptr) || (crc&0xFF) == (*(crcptr+1)) )){
+			DisableInterrupts();
+			//--------------------------------
+			//82  13  44  31  03  00 00  C2   FE 30 - read response
+			//Hdr Cmd Src Dst Len Id     Data Crc
+			if( (msg_cmd==CMD03) || (msg_cmd==CMD73) )//Read response
+			{
+				if (trr->t_cmd != 0x13 || msg_len < 10){
+					ErrorCMDTelevislog++;//short message
+				}
+				ev->ev_len = trr->t_len - 2;
+				ev->dataptr = &trr->t_data;
 			}
-			crcptr = &TelevisBuf[data_len];//pointer to crc in the message
-			crc = TelevisCrc16(TelevisBuf, data_len);//calculate crc
-		}
-		//--------------------------------
-		else if( msg_cmd == CMD43 )//Device ID response
-		{
+			//--------------------------------
+			//82  05  44  31  00  FF 03 - write response
+			//Hdr Cmd Src Dst Len Crc
+			else if( msg_cmd==CMD06 || msg_cmd==CMD10 || (msg_cmd==CMD76) )//Write response
+			{
+				if (trr->t_cmd != 0x05 || msg_len < 7){
+					ErrorCMDTelevislog++;//short message
+				}
+			}
+			//--------------------------------
+			else if( msg_cmd == CMD43 )//Device ID response
+			{
 			//if (trr->cmd != 0x56 || len < 7) return FALSE;//short message
-			ev->dataptr = &TelevisBuf[5];
-			ev->ev_len = trr->t_len;
-			crcptr = &TelevisBuf[data_len];//pointer to crc in the message
-			crc = TelevisCrc16(TelevisBuf, data_len);//calculate crc
-		}
+				ev->dataptr = &TelevisBuf[5];
+				ev->ev_len = trr->t_len;
+			}
 		//--------------------------------
 		//82  56  33  EE  03  02 04 02  FD FB - scan response
 		//Hdr Cmd Src Dst Len Data      Crc
-		else if( msg_cmd == SCAN )//Scan response
-		{
-			if(!DeviceFound){
-				DeviceFound = true;
+			else if( msg_cmd == SCAN )//Scan response
+			{
+				if(!DeviceFound){
+					DeviceFound = true;
+				}
+				ev->dataptr = &TelevisBuf[regH];
+				ev->ev_len = 3;//trr->len;
 			}
-			
-			//if (trr->cmd != 0x56 || len < 7) return FALSE;//short message
-			ev->dataptr = &TelevisBuf[regH];
-			ev->ev_len = 3;//trr->len;
-			crcptr = &TelevisBuf[data_len];//pointer to crc in the message
-			crc = TelevisCrc16(TelevisBuf, data_len);//calculate crc
-		}
 		//--------------------------------
-		else {
+			else {
 			//unknown command
-			_Error_Handler(__FILE__, __LINE__);
-		}
-		DebugTelevisBuf[15] = *crcptr;
-		DebugTelevisBuf[16] = *(crcptr+1);
-		if ( (crc >> 8) != (*crcptr) || (crc&0xFF) != (*(crcptr+1)) ){
-			//wrong crc
-			_Error_Handler(__FILE__, __LINE__);
-		}
-		CountHandleReceive++;
-		EnableInterrupts();
-		if(DeviceFound && msg_cmd == SCAN){
-			OS_Signal(&TelevisCtrlScanSema);
+				ErrorCMDTelevislog++;
+			}
+			CountHandleReceive++;
+			EnableInterrupts();
+			if(DeviceFound && msg_cmd == SCAN){
+				OS_Signal(&TelevisCtrlScanSema);
+			} else {
+				OS_Signal(&ModbusSendSema);
+			}
 		} else {
-			OS_Signal(&ModbusSendSema);
+			OS_Signal(&U3_RxInitSema);
 		}
 	}
 
@@ -355,8 +331,8 @@ void TelevisHndlReceive(void)
 //-----------------------------------------------------------
 void TelevisSend(void)
 {
-  uint8_t data_len, msg_cmd, msg_len;
-  uint32_t crc;
+  uint8_t msg_cmd, msg_len;
+  uint32_t data_len, crc;
 
 	while(1){
 		OS_Wait(&TelevisHndlSendSema);
@@ -370,7 +346,7 @@ void TelevisSend(void)
 		//--------------------------------
 		//82  92  31  44  05  10 A8  01   00 00  FD E8
 		//Hdr Cmd Src Dst Len Reg    Num  Id     Crc
-		if((msg_cmd == CMD03) ||(msg_cmd == CMD73))
+		if(( msg_cmd == CMD03 ) || ( msg_cmd == CMD73 ))
 		{
 			if(msg_cmd == CMD03) trr->t_cmd = 0x92; else trr->t_cmd = 0x12;
 
@@ -395,23 +371,23 @@ void TelevisSend(void)
 		//--------------------------------
 		//82  93  31  44  04  10 02  32 00  FE 2D
 		//Hdr Cmd Src Dst Len Reg    Data   Crc
-		else if(msg_cmd == CMD06 || msg_cmd == CMD10)
+		else if( msg_cmd == CMD06 || msg_cmd == CMD10 )
 		{
-			if((data_len = ev->ev_len) > 20){
-				_Error_Handler(__FILE__, __LINE__); // error
+			data_len = ev->ev_len;
+			if( data_len > 20 ){
+				ErrorCMDTelevislog++; // error
+			} else {
+				twr->t_cmd = 0x93;
+				twr->t_len  = data_len + 2;
+				twr->t_regH = ev->ev_reg >> 8;
+				twr->t_regL = ev->ev_reg;
+				for(uint32_t i = 0; i < data_len; i++){
+					*(&twr->t_data + (i^1)) = *(ev->dataptr + i); //^1 because need to swap bytes
+				}
+				msg_len = data_len + 7;
 			}
-			twr->t_cmd = 0x93;
-			twr->t_len  = data_len + 2;
-			twr->t_regH = ev->ev_reg >> 8;
-			twr->t_regL = ev->ev_reg;
-			//x=ev->size;//if byte size no need to swap
-			//for (i=0; i<n; i++) *(&twr->data+(i^x)) = *(ev->dataptr+i);//^x means swap bytes
-			for(uint32_t i = 0; i < data_len; i++){
-				*(&twr->t_data + (i^1)) = *(ev->dataptr + i); //^1 because need to swap bytes
-			}
-			msg_len = data_len + 7;
 		}
-		else if(msg_cmd == CMD76)
+		else if( msg_cmd == CMD76 )
 		{
 			twr->t_cmd = 0x93;
 			twr->t_len = 3;
@@ -423,7 +399,7 @@ void TelevisSend(void)
 		//--------------------------------
 		//82  D6  EE  33  01  02   FD 83
 		//Hdr Cmd Src Dst Len Data Crc
-		else if(msg_cmd == CMD43)
+		else if( msg_cmd == CMD43 )
 		{
 			twr->t_cmd = SCAN;
 			twr->t_sender = 0;
@@ -432,7 +408,7 @@ void TelevisSend(void)
 			twr->t_regH = *ev->dataptr;//0x02;
 			msg_len = 6;
 		}
-		else if(msg_cmd == SCAN)
+		else if( msg_cmd == SCAN )
 		{
 			twr->t_cmd = SCAN;
 			twr->t_sender = 0;

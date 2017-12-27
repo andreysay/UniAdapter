@@ -35,7 +35,7 @@ typedef struct TEvent
   uint8_t ev_cmd;
   uint32_t ev_reg;
   uint8_t *dataptr;
-  uint8_t ev_len;
+  uint32_t ev_len;
   uint8_t ev_debug;
   uint8_t ev_size;
 } TEvent;

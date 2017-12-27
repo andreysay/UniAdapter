@@ -28,6 +28,8 @@ int32_t ModbusSendSema;
 
 int32_t ModbusPortTxInitSema;
 
+uint32_t ErrorCMD06_76Modbuslog, ErrorCMDDEBModbuslog, ErrorCMD03_73Modbuslog, ErrorCMD10Modbuslog, ErrorCMD43Modbuslog, ErrorCMDModbuslog;
+
 // link to ControllerType.c
 extern TEvent *const ev;
 extern TEvent Event;
@@ -204,6 +206,7 @@ static uint32_t ModbusCrc16(const uint8_t *msg_data, uint8_t msg_len)
 //		state= false;
 //	}
 //}
+uint32_t Count10;
 void ModbusHndlReceive(void)//Request Called by App
 {
   ModbusCmd *mb = (ModbusCmd*)ModbusBuf;
@@ -212,118 +215,108 @@ void ModbusHndlReceive(void)//Request Called by App
   uint8_t msg_cmd, *crcptr, data_len, msg_len;
 	while(1){
 		OS_Wait(&ModbusHndlReceiveSema);
-		DisableInterrupts();
 		ev->ev_reg = 0;
 		msg_len = ModbusMsgSize;
 		data_len = msg_len - 2;
 		ModbusMsgSize = 0;
-		msg_cmd = mb->cmd;		
+		crc = ModbusCrc16(ModbusBuf, data_len); //calculate crc
+		crcptr = &ModbusBuf[data_len]; //pointer to crc in the message
+		// Listen for frames addressed only for connected controller or broadcast and valid CRC
+		if( ((mb->addr == ev->ev_addr) || (mb->addr == BROADCAST)) && ((crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1)) ){ 
+			DisableInterrupts();		
+			msg_cmd = mb->cmd;		
 #ifdef DEBUGVIEW		
-		DebugModbusBuf[0] = mb->addr;
-		DebugModbusBuf[1] = mb->cmd;
-		DebugModbusBuf[2] = mb->regHi;
-		DebugModbusBuf[3] = mb->regLo;
-		DebugModbusBuf[4] = mb->regNumH;
-		DebugModbusBuf[5] = mb->regNumL;
-		DebugModbusBuf[6] = '\0';		
-		DebugModbusBuf[7] = msg_len;
-		DebugModbusBuf[8] = data_len;
-		DebugModbusBuf[9] = msg_cmd;
-#endif		
-		if((mb->addr != ev->ev_addr) && (mb->addr != BROADCAST)){
-			_Error_Handler(__FILE__, __LINE__); //if wrong addr
-		}
-		//--------------------------------
-		//44   03   C0 A8  00 01  B2 BC
-		//Addr Cmd  Reg    Num    Crc
-		if( (msg_cmd==CMD03) || (msg_cmd==CMD73) )//multy reg read command
-		{ 
-			if( msg_len < 8 ){
-				_Error_Handler(__FILE__, __LINE__);//short message
-			}
-			ev->ev_len = mb->regNumL << 1; //len always doubled
-			crc = ModbusCrc16(ModbusBuf, data_len);//calculate crc
-			crcptr = &ModbusBuf[data_len];//pointer to crc in the message
-#ifdef DEBUGVIEW
+			DebugModbusBuf[0] = mb->addr;
+			DebugModbusBuf[1] = mb->cmd;
+			DebugModbusBuf[2] = mb->regHi;
+			DebugModbusBuf[3] = mb->regLo;
+			DebugModbusBuf[4] = mb->regNumH;
+			DebugModbusBuf[5] = mb->regNumL;
+			DebugModbusBuf[6] = '\0';		
+			DebugModbusBuf[7] = msg_len;
+			DebugModbusBuf[8] = data_len;
+			DebugModbusBuf[9] = msg_cmd;
 			DebugModbusBuf[10] = crc;
-			DebugModbusBuf[11] = ev->ev_len;
-#endif			
-		}
-		//--------------------------------
-		//44   06   C0 A8  12 34  B2 BC
-		//Addr Cmd  Reg    Data   Crc
-		else if( (msg_cmd==CMD06) || (msg_cmd==CMD76) )//one reg write command
-		{
-			if( msg_len < 7 ){
-				_Error_Handler(__FILE__, __LINE__);//short message
+			DebugModbusBuf[11] = mb->regNumL << 1;		
+#endif		
+			//--------------------------------
+			//44   03   C0 A8  00 01  B2 BC
+			//Addr Cmd  Reg    Num    Crc
+			if( (msg_cmd == CMD03) || (msg_cmd == CMD73) ) //multy reg read command
+			{ 
+				if( msg_len < 8 ){
+					ErrorCMD03_73Modbuslog++;//short message
+				}
+				ev->ev_len = mb->regNumL << 1; //len always doubled		
 			}
-			crc = ModbusCrc16(ModbusBuf, data_len);//calculate crc
-			crcptr = &ModbusBuf[data_len];//pointer to crc in the message
-			ev->ev_len = 2;
-			//if (len==7) {ev->len=1; ev->size=0;} else {ev->len=2; ev->size=1;}//len depends on request len
-			ev->dataptr = &ModbusBuf[4];
-		}
-		//--------------------------------
-		//44   10  C0 A8  00 01  02  12 34  B2 BC
-		//Addr Cmd Reg    Num    Len Data   Crc
-		else if( msg_cmd==CMD10 )//multy reg write command
-		{
-			if( msg_len<10 ){
-				_Error_Handler(__FILE__, __LINE__);//short message
+			//--------------------------------
+			//44   06   C0 A8  12 34  B2 BC
+			//Addr Cmd  Reg    Data   Crc
+			else if( (msg_cmd == CMD06) || (msg_cmd == CMD76) )//one reg write command
+			{
+				if( msg_len < 7 ){
+					ErrorCMD06_76Modbuslog++;//short message
+				}
+				ev->ev_len = 2;
+				//if (len==7) {ev->len=1; ev->size=0;} else {ev->len=2; ev->size=1;}//len depends on request len
+				ev->dataptr = &ModbusBuf[4];
 			}
-			crc = ModbusCrc16(ModbusBuf, data_len);//calculate crc
-			crcptr = &ModbusBuf[data_len];//pointer to crc in the message
-			//if (cmd10->len == cmd10->num) {ev->len = cmd10->len; ev->size=0;}//len depends on data len
-			//else {ev->len = cmd10->num<<1; ev->size=1;}
-			ev->ev_len = cmd10->num<<1;
-			ev->dataptr = &ModbusBuf[7];
-		}
+			//--------------------------------
+			//44   10  C0 A8  00 01  02  12 34  B2 BC
+			//Addr Cmd Reg    Num    Len Data   Crc
+			else if( msg_cmd == CMD10 ) //multy reg write command
+			{
+				if( msg_len < 10 ){
+					ErrorCMD10Modbuslog++; //short message
+				}
+				//if (cmd10->len == cmd10->num) {ev->len = cmd10->len; ev->size=0;}//len depends on data len
+				//else {ev->len = cmd10->num<<1; ev->size=1;}
+				ev->ev_len = cmd10->numLo << 1;
+				ev->dataptr = &ModbusBuf[7];
+			}
+			//-------------------------------
+			//44   2B  00  01 02  B2 BC
+			//Addr Cmd MEI Data   Crc
+			else if( msg_cmd == CMD43 )
+			{
+				if( data_len < 5 ){
+					ErrorCMD43Modbuslog++; //short message
+				}
+				ev->dataptr = &ModbusBuf[2];
+				ev->ev_len = 1;
+			}
+			//-------------------------------
+			else if( msg_cmd == DEBUG )
+			{
+				if( data_len < 5 ){
+					ErrorCMDDEBModbuslog++;//short message
+				}
+				ev->ev_debug = ModbusBuf[2];
+			}
 		//-------------------------------
-		//44   2B  00  01 02  B2 BC
-		//Addr Cmd MEI Data   Crc
-		else if (msg_cmd == CMD43)
-		{
-			if( data_len < 5 ){
-				_Error_Handler(__FILE__, __LINE__);//short message
+			else
+			{		
+				ErrorCMDModbuslog++;//unknown command
 			}
-			ev->dataptr = &ModbusBuf[2];
-			ev->ev_len = 1;
-			crc = ModbusCrc16(ModbusBuf, data_len);//calculate crc
-			crcptr = &ModbusBuf[data_len];//pointer to crc in the message
-		}
-		//-------------------------------
-		else if (msg_cmd == DEBUG)
-		{
-			if (data_len < 5){
-				_Error_Handler(__FILE__, __LINE__);//short message
-			}
-			crc = ModbusCrc16(ModbusBuf, data_len);//calculate crc
-			crcptr = &ModbusBuf[data_len];//pointer to crc in the message
-		}
-  //-------------------------------
-		else
-		{		
-			_Error_Handler(__FILE__, __LINE__);//unknown command
-		}
 	
-		if( (crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1) )//verify crc
-		{
 			ev->ev_cmd = msg_cmd;
 			ev->ev_reg |= mb->regHi;
 			ev->ev_reg = ev->ev_reg << 8;
 			ev->ev_reg |= mb->regLo;
-			if(msg_cmd == DEBUG) ev->ev_debug = ModbusBuf[2];
-			if(mb->addr == BROADCAST){
-				_Error_Handler(__FILE__, __LINE__);
-			}
 
-//    if(ev->debug == NEARLOOP) {Send(); return FALSE;}
-//    if (cmd == DEBUG) {Send(); return FALSE;}
+//			if(mb->addr == BROADCAST){
+//				; // should keep silence, need to implement
+//			}
+			EnableInterrupts();
+//			if( ev->ev_debug == NEARLOOP ){
+//				OS_Signal(&ModbusPortTxInitSema);
+//			} else {
+				OS_Signal(&TelevisHndlSendSema);
+//			}
 		} else {
-			_Error_Handler(__FILE__, __LINE__);
+			OS_Signal(&U3_RxInitSema);
 		}
-		EnableInterrupts();
-		OS_Signal(&TelevisHndlSendSema);
+		Count10++;
 	}
 }
 
@@ -331,7 +324,7 @@ void ModbusSend(void)//Reply Called by App
 {
   uint32_t crc;
   uint8_t msg_cmd, data_len, msg_len;
-	ModbusReply03 *r03=(ModbusReply03*)ModbusBuf;
+	ModbusReply03 *r03 = (ModbusReply03*)ModbusBuf;
 	
 	while(1){
 		OS_Wait(&ModbusSendSema);
@@ -345,7 +338,7 @@ void ModbusSend(void)//Reply Called by App
 		//--------------------------------
 		//44   03   02  00 C2   F4 1A
 		//Addr Cmd Len  Data    Crc
-		if( (msg_cmd==CMD03) || (msg_cmd==CMD73) )
+		if( (msg_cmd == CMD03) || (msg_cmd == CMD73) )
 		{
 			if( (data_len = ev->ev_len ) > 20) data_len = 2;
 			
@@ -371,7 +364,7 @@ void ModbusSend(void)//Reply Called by App
 		//--------------------------------
 		//44   06   C0 A8  12 34  B2 BC
 		//Addr Cmd  Reg    Data   Crc
-		else if( (msg_cmd==CMD06) || (msg_cmd==CMD76) )//Should return the same reply as request
+		else if( (msg_cmd == CMD06) || (msg_cmd == CMD76) )//Should return the same reply as request
 		{
 			//ModbusReply06 *r06=(ModbusReply06*)ModbusBuf;
 			//r06->reg = ev->reg;
@@ -382,15 +375,17 @@ void ModbusSend(void)//Reply Called by App
 		//--------------------------------
 		//44   10   C0 A8  00 01  B2 BC
 		//Addr Cmd  Reg    Num    Crc
-		else if( msg_cmd==CMD10 ) 
+		else if( msg_cmd == CMD10 ) 
 		{
 			ModbusReply10 *r10=(ModbusReply10*)ModbusBuf;
-			r10->reg = ev->ev_reg;
-			r10->num = ev->ev_len;
+			r10->regHi = (ev->ev_reg >> 8);
+			r10->regLo = (ev->ev_reg & 0xFF);
+			r10->numHi = (ev->ev_len >> 8);
+			r10->numLo = (ev->ev_len & 0xFF);
 			msg_len = 6;
 		}
 		//--------------------------------
-		else if( msg_cmd==CMD43 )
+		else if( msg_cmd == CMD43 )
 		{
 			for(uint32_t i=0; i<ev->ev_len; i++){
 				ModbusBuf[i+3] = *(ev->dataptr+i);
@@ -401,9 +396,9 @@ void ModbusSend(void)//Reply Called by App
 		else {
 			msg_len = 1;
 		}
-		crc = ModbusCrc16(ModbusBuf, msg_len);//Calculate CRC
-		ModbusBuf[msg_len++] = crc;//Add CRC to buf
-		ModbusBuf[msg_len++] = crc>>8;
+		crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
+		ModbusBuf[msg_len++] = crc; //Add CRC to buf
+		ModbusBuf[msg_len++] = crc >> 8;
 		U3_TxMessageSize = msg_len;
 		OS_Signal(&ModbusPortTxInitSema);
 	}

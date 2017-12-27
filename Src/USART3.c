@@ -106,9 +106,9 @@ void USART3_Init(void){
   */
 void USART3_TransmitComplete_Callback(void)
 {
+	DebugModbusBuf[13] = U3_idxTx;
 	if(U3_idxTx >= U3_TxMessageSize)
   { 
-		DebugModbusBuf[13] = U3_idxTx;
 		U3_idxTx = 0;
     /* Disable TC interrupt */
     LL_USART_DisableIT_TC(USART3);
@@ -118,9 +118,7 @@ void USART3_TransmitComplete_Callback(void)
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
 		OS_Signal(&U3_RxSemaphore); // Signal semaphore to start accept new request from MU Port
-  } else {
-		DebugModbusBuf[14] = U3_idxTx;
-	}
+  }
 }
 
 /**
@@ -170,7 +168,7 @@ void USART3_Reception_Callback(void)
   * @retval None
   */
 void USART3_IDLE_Callback(void){
-	if(U3_idxRx >= 6 && U3_idxRx < RX_BUFFER_SIZE){
+	if(U3_idxRx < RX_BUFFER_SIZE){
 		/* Idle detected, Buffer full indication has been set */
 		U3_BufferReadyIndication = 1;
 		/* Save received data size */

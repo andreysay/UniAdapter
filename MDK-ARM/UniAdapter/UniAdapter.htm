@@ -3,7 +3,7 @@
 <title>Static Call Graph - [UniAdapter\UniAdapter.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image UniAdapter\UniAdapter.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Dec 25 16:51:44 2017
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Wed Dec 27 15:38:32 2017
 <BR><P>
 <H3>Maximum Stack Usage =         88 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -413,7 +413,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LED_ErrorBlinking
 </UL>
 
-<P><STRONG><a name="[68]"></a>ControllerTypeDetection</STRONG> (Thumb, 152 bytes, Stack size 8 bytes, controllertype.o(i.ControllerTypeDetection))
+<P><STRONG><a name="[68]"></a>ControllerTypeDetection</STRONG> (Thumb, 150 bytes, Stack size 8 bytes, controllertype.o(i.ControllerTypeDetection))
 <BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = ControllerTypeDetection &rArr; _Error_Handler &rArr; LED_ErrorBlinking &rArr; Configure_TIM2TimeBase
 </UL>
 <BR>[Calls]<UL><LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_Error_Handler
@@ -597,8 +597,8 @@ Global Symbols
 <P><STRONG><a name="[7c]"></a>HAL_TIM_IRQHandler</STRONG> (Thumb, 406 bytes, Stack size 8 bytes, stm32f1xx_hal_tim.o(i.HAL_TIM_IRQHandler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = HAL_TIM_IRQHandler
 </UL>
-<BR>[Calls]<UL><LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PeriodElapsedCallback
-<LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_TriggerCallback
+<BR>[Calls]<UL><LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_TriggerCallback
+<LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PeriodElapsedCallback
 <LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_PulseFinishedCallback
 <LI><a href="#[7e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_OC_DelayElapsedCallback
 <LI><a href="#[7d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IC_CaptureCallback
@@ -617,7 +617,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IRQHandler
 </UL>
 
-<P><STRONG><a name="[80]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, main.o(i.HAL_TIM_PeriodElapsedCallback))
+<P><STRONG><a name="[80]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f1xx_hal_tim.o(i.HAL_TIM_PeriodElapsedCallback))
 <BR><BR>[Called By]<UL><LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IRQHandler
 </UL>
 
@@ -760,12 +760,11 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[4d]"></a>ModbusHndlReceive</STRONG> (Thumb, 514 bytes, Stack size 0 bytes, modbus.o(i.ModbusHndlReceive))
-<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
-<LI>Call Chain = ModbusHndlReceive &rArr; _Error_Handler &rArr; LED_ErrorBlinking &rArr; Configure_TIM2TimeBase
+<P><STRONG><a name="[4d]"></a>ModbusHndlReceive</STRONG> (Thumb, 426 bytes, Stack size 0 bytes, modbus.o(i.ModbusHndlReceive))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16 + Unknown Stack Size
+<LI>Call Chain = ModbusHndlReceive &rArr; OS_Signal
 </UL>
 <BR>[Calls]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_Wait
-<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_Error_Handler
 <LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableInterrupts
 <LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisableInterrupts
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ModbusCrc16
@@ -818,7 +817,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(i.main)
 </UL>
-<P><STRONG><a name="[4e]"></a>ModbusSend</STRONG> (Thumb, 334 bytes, Stack size 0 bytes, modbus.o(i.ModbusSend))
+<P><STRONG><a name="[4e]"></a>ModbusSend</STRONG> (Thumb, 354 bytes, Stack size 0 bytes, modbus.o(i.ModbusSend))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16 + Unknown Stack Size
 <LI>Call Chain = ModbusSend &rArr; OS_Signal
 </UL>
@@ -1053,12 +1052,11 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(i.main)
 </UL>
-<P><STRONG><a name="[4a]"></a>TelevisHndlReceive</STRONG> (Thumb, 442 bytes, Stack size 0 bytes, televis.o(i.TelevisHndlReceive))
-<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
-<LI>Call Chain = TelevisHndlReceive &rArr; _Error_Handler &rArr; LED_ErrorBlinking &rArr; Configure_TIM2TimeBase
+<P><STRONG><a name="[4a]"></a>TelevisHndlReceive</STRONG> (Thumb, 330 bytes, Stack size 0 bytes, televis.o(i.TelevisHndlReceive))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16 + Unknown Stack Size
+<LI>Call Chain = TelevisHndlReceive &rArr; OS_Signal
 </UL>
 <BR>[Calls]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_Wait
-<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_Error_Handler
 <LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableInterrupts
 <LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisableInterrupts
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TelevisCrc16
@@ -1130,12 +1128,11 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(i.main)
 </UL>
-<P><STRONG><a name="[47]"></a>TelevisSend</STRONG> (Thumb, 396 bytes, Stack size 0 bytes, televis.o(i.TelevisSend))
-<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
-<LI>Call Chain = TelevisSend &rArr; _Error_Handler &rArr; LED_ErrorBlinking &rArr; Configure_TIM2TimeBase
+<P><STRONG><a name="[47]"></a>TelevisSend</STRONG> (Thumb, 398 bytes, Stack size 0 bytes, televis.o(i.TelevisSend))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16 + Unknown Stack Size
+<LI>Call Chain = TelevisSend &rArr; OS_Signal
 </UL>
 <BR>[Calls]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_Wait
-<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_Error_Handler
 <LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableInterrupts
 <LI><a href="#[6a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisableInterrupts
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TelevisCrc16
@@ -1216,7 +1213,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[2f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART1_IRQHandler
 </UL>
 
-<P><STRONG><a name="[b2]"></a>USART3_IDLE_Callback</STRONG> (Thumb, 74 bytes, Stack size 8 bytes, usart3.o(i.USART3_IDLE_Callback))
+<P><STRONG><a name="[b2]"></a>USART3_IDLE_Callback</STRONG> (Thumb, 66 bytes, Stack size 8 bytes, usart3.o(i.USART3_IDLE_Callback))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24 + Unknown Stack Size
 <LI>Call Chain = USART3_IDLE_Callback &rArr; OS_Signal
 </UL>
@@ -1258,7 +1255,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[31]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3_IRQHandler
 </UL>
 
-<P><STRONG><a name="[b5]"></a>USART3_TransmitComplete_Callback</STRONG> (Thumb, 92 bytes, Stack size 8 bytes, usart3.o(i.USART3_TransmitComplete_Callback))
+<P><STRONG><a name="[b5]"></a>USART3_TransmitComplete_Callback</STRONG> (Thumb, 82 bytes, Stack size 8 bytes, usart3.o(i.USART3_TransmitComplete_Callback))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24 + Unknown Stack Size
 <LI>Call Chain = USART3_TransmitComplete_Callback &rArr; HAL_GPIO_WritePin
 </UL>
@@ -1302,9 +1299,6 @@ Global Symbols
 <LI><a href="#[2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HardFault_Handler
 <LI><a href="#[7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DebugMon_Handler
 <LI><a href="#[4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BusFault_Handler
-<LI><a href="#[47]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TelevisSend
-<LI><a href="#[4a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TelevisHndlReceive
-<LI><a href="#[4d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ModbusHndlReceive
 <LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ControllerTypeDetection
 <LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BSP_PeriodicTask_InitB
 <LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;BSP_PeriodicTask_Init

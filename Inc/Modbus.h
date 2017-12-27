@@ -33,9 +33,7 @@ typedef struct ModbusReply03
   uint8_t addr;//Device addr
   uint8_t cmd;//Cmd=0x03
   uint8_t len;//Bytes len
-//	uint8_t lenLo;
   uint8_t data;//Data Hi MSB first
-//	uint8_t dataLo;
 }ModbusReply03;
 
 typedef struct ModbusCmd06 //Write Reg
@@ -55,19 +53,23 @@ typedef struct ModbusReply06 //
 
 typedef struct ModbusCmd10 //Write Regs
 {
-  uint8_t addr;//Device addr
-  uint8_t cmd;//Cmd=0x10
-  uint32_t reg;//Reg addr
-  uint32_t num;//Regs num to write, usually 0x0001, MSB first
-  uint8_t len;//Bytes len
+  uint8_t addr;		//Device addr
+  uint8_t cmd;		//Cmd=0x10
+  uint8_t regHi; 	//Reg MSB byte addr
+	uint8_t regLo; 	//Reg LSB byte addr
+  uint8_t numHi;	//Regs num to write, usually 0x0001, MSB first
+	uint8_t numLo;
+  uint8_t numByts;		//	Bytes len
   uint8_t data;//Data to write
 }ModbusCmd10;
 typedef struct ModbusReply10
 {
   uint8_t addr;//Device addr
   uint8_t cmd;//Cmd=0x10
-  uint32_t reg;//Reg addr
-  uint32_t num;//Regs num written, usually 0x0001, MSB first
+  uint8_t regHi; //Reg MSB byte addr
+	uint8_t regLo; //Reg LSB byte addr
+  uint8_t numHi;//Regs num written, usually 0x0001, MSB first
+	uint8_t numLo;
 }ModbusReply10;
 
 /* Private function prototypes -----------------------------------------------*/
