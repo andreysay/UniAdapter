@@ -66,26 +66,76 @@ typedef struct TelevisWriteReply
 
 
 /* Private function prototypes -----------------------------------------------*/
+//***********TelevisTIM2TimeInit***************
+// returns none
+// Inputs:  none
+// Outputs: none
+// Initialize TIM2 to get ticks in microseconds
 void TelevisTIM2TimeInit(void);
-
+//***********TTimerDelay***************
+// returns none
+// Inputs:  Delay time in microseconds
+// Outputs: none
+// Delay amount of time in microseconds
 void TTimerDelay(uint32_t msTimeDelay);
-
+//***********TelevisEventThread100ms***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Event thread which active every 100 milli second 
 void TelevisEventThread100ms(void);
-
+//***********TelevisEventThread1sec***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Event thread which active every 1 second 
 void TelevisEventThread1sec(void);
-
+//***********TelevisPortRxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize index variable, buffer pointer, USART1 interrupts
+// signal TelevisPortReception() for reception
 void TelevisPortRxInit(void);
-
+//***********TelevisPortReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Waiting for data reception from USART1, will signal by USART1 ISR from USART1_IDLE_Callback()n
 void TelevisPortReception(void);
-
+//***********TelevisPortTxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize controller port for transmission, index variable, pointer to buffer and transmission buffer,
+// USART1 with ODD parity
 void TelevisPortTxInit(void);
-
+//***********TelevisPortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Send Televis message to connected controller through USART1,
+// first byte will send with ODD parity, after delay 100 microseconds will send other part of message with EVEN parity
 void TelevisPortSendMsg(void);
-
+//***********TelevisHndlReceive***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle message from controlled by Televis protocol
 void TelevisHndlReceive(void);
-
+//***********TelevisSend***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Convert message from Modbus to Televis, signal TelevisPortTxInit() to transmit
 void TelevisSend(void);
-
+//***********TelevisScan***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize connected controller address scan by setup Televis scan message and 
+// signal TelevisPortTxInit() to transmit it to connected controller, if responce will received, controller address was found,
+// thread will blocked, MU port reception thread will signaled otherwise will prepare new scan message every 200ms.
 void TelevisScan(void);
 
 #endif /* __TELEVIS_H */

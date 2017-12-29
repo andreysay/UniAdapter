@@ -14,21 +14,29 @@
 #include "LED.h"
 #include "Modbus.h"
 
+#ifdef APDEBUG
 uint8_t DebugModbusBuf[64]; // Buffer for debugging purpose
-
-uint8_t ModbusBuf[RX_BUFFER_SIZE];
-
-uint32_t ModbusMsgSize;
-
-int32_t ModbusReceiveSema;
-
-int32_t ModbusHndlReceiveSema;
-
-int32_t ModbusSendSema;
-
-int32_t ModbusPortTxInitSema;
-
+// counters for errors debuging
 uint32_t ErrorCMD06_76Modbuslog, ErrorCMDDEBModbuslog, ErrorCMD03_73Modbuslog, ErrorCMD10Modbuslog, ErrorCMD43Modbuslog, ErrorCMDModbuslog;
+
+// Counters for debugging
+extern uint32_t Count0;
+extern uint32_t Count1;
+extern uint32_t Count2;
+uint32_t Count9, Count10, Count11;
+#endif
+// Buffer for handling received Modbus message
+uint8_t ModbusBuf[RX_BUFFER_SIZE];
+// Variable for storing Modbus message size
+uint32_t ModbusMsgSize;
+// 
+//int32_t ModbusReceiveSema;
+// Semaphore will use in ModbusHndlReceive() for thread management
+int32_t ModbusHndlReceiveSema;
+// Semaphore will use in ModBusSend() for thread management
+int32_t ModbusSendSema;
+// Semaphore will use in ModbusPortTxInit for thread management
+int32_t ModbusPortTxInitSema;
 
 // link to ControllerType.c
 extern TEvent *const ev;
@@ -52,13 +60,20 @@ extern uint8_t U3_TXBuffer[]; // defined in main_threads.c file
 
 // link to Televis.c
 extern int32_t TelevisHndlSendSema;
-//extern uint8_t TelevisBuf[];
 
-// Counters for debugging
-extern uint32_t Count0;
+/* Private function prototypes -----------------------------------------------*/
+static uint32_t ModbusCrc16(const uint8_t *msg_data, uint8_t msg_len);
+
+//***********ModbusPortRxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize MU port for data reception, will signal from TelevisScan() after connected controller address found
 void ModbusPortRxInit(void)
 {
+#ifdef APDEBUG	
 	Count0 = 0;
+#endif	
 	GPIO_PinState pinDirState;
 	while(1){
 		OS_Wait(&U3_RxInitSema);
@@ -72,7 +87,6 @@ void ModbusPortRxInit(void)
 		U3_BufferReadyIndication = 0;
 		// buffers pointers initialization
 		U3_pBufferReception = &U3_RXBuffer[0];
-//		U3_pBufferTransmit = &U3_TXBuffer[0];
 		/* Enable IDLE */
 		LL_USART_EnableIT_IDLE(USART3);
 		/* Clear Overrun flag, in case characters have already been sent to USART */
@@ -82,15 +96,23 @@ void ModbusPortRxInit(void)
 		LL_USART_EnableIT_RXNE(USART3);
 		LL_USART_EnableIT_ERROR(USART3);		
 		OS_Signal(&U3_RxSemaphore);
+#ifdef APDEBUG		
 		Count0++;
+#endif		
 	}
 }
 
-extern uint32_t Count1;
+//***********ModbusPortReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Wait for data reception from MU trough USART3, will signal from USART3 ISR trough USART3_IDLE_Callback()
 void ModbusPortReception(void)
 {
+#ifdef APDEBUG	
 	Count1 = 0;
-	uint8_t i = 0;
+#endif	
+
 	while(1){
 		OS_Wait(&U3_RxSemaphore);
   /* Checks if Buffer full indication has been set */
@@ -101,9 +123,9 @@ void ModbusPortReception(void)
 			/* Reset indication */
 			U3_BufferReadyIndication = 0;
 			ModbusMsgSize = U3_RxMessageSize;
-			for(i = 0; i < U3_RxMessageSize; i++){
+			for(uint8_t i = 0; i < U3_RxMessageSize; i++){
 				ModbusBuf[i] = U3_RXBuffer[i];
-//				U3_RXBuffer[i] = 0;
+				U3_RXBuffer[i] = 0;
 			}
 			/* Turn off green led, indication that data from monitor unit received */	
 			LEDs_off();
@@ -111,39 +133,55 @@ void ModbusPortReception(void)
 			EnableInterrupts();
 			OS_Signal(&ModbusHndlReceiveSema);
 		}
+#ifdef APDEBUG		
 		Count1++;
+#endif		
 	}
 }
 
-uint32_t Count9;
+//***********ModbusPortTxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize variables and fill out buffers for MU port transmittion
 void ModbusPortTxInit(void){
+#ifdef APDEBUG	
 	Count9 = 0;
+#endif	
 	GPIO_PinState pinDirState;
 	
 	while(1){
 		OS_Wait(&ModbusPortTxInitSema);
 		U3_pBufferTransmit = &U3_TXBuffer[0];
 		DisableInterrupts();
+#ifdef APDEBUG		
 		DebugModbusBuf[13] = U3_TxMessageSize;
+#endif		
 		for(uint32_t i = 0; i < U3_TxMessageSize; i++){
 			U3_TXBuffer[i] = ModbusBuf[i];
-//		ModbusBuf[i] = 0;
+			ModbusBuf[i] = 0;
 		}
 		EnableInterrupts();
 		pinDirState = HAL_GPIO_ReadPin(GPIO_Dir, PIN_Dir);
 		if(pinDirState != GPIO_PIN_SET){
 			HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_SET);
 		}
-		Count9++;
 		OS_Signal(&U3_TxSemaphore);
+#ifdef APDEBUG
+		Count9++;
+#endif		
 	}
 }
 
-
-extern uint32_t Count2;
+//***********ModbusPortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// transmit data to MU device through USART3
 void ModbusPortSendMsg(void){
+#ifdef APDEBUG	
 	Count2 = 0;
-
+#endif
 	while(1){
 		OS_Wait(&U3_TxSemaphore);
 		/* Turn ORANGE On at start of transfer : Tx started */
@@ -151,11 +189,18 @@ void ModbusPortSendMsg(void){
 		/* Fill DR with a new char */
 		LL_USART_TransmitData8(USART3, U3_TXBuffer[U3_idxTx++]);
 		/* Enable TXE interrupt */
-		LL_USART_EnableIT_TXE(USART3); 
+		LL_USART_EnableIT_TXE(USART3);
+#ifdef APDEBUG		
 		Count2++;
+#endif		
 	}
 }
-//-----------------------------------------------------------
+
+//***********ModbusCrc16***************
+// returns the CRC of an Modbus message
+// Inputs:  pointer to Modbus message, size of the message
+// Outputs: the CRC
+// calculated CRC for received Modbus message
 static uint32_t ModbusCrc16(const uint8_t *msg_data, uint8_t msg_len) 
 {
   uint32_t crc_value = 0;
@@ -179,40 +224,21 @@ static uint32_t ModbusCrc16(const uint8_t *msg_data, uint8_t msg_len)
   return crc_value;
 }
 
-//-----------------------------------------------------------
-//void ModbusReceive(void)
-//{
-
-//	ModbusCmd *mb = (ModbusCmd*)ModbusBuf;
-//	uint32_t crc;
-//	uint8_t *crcptr, data_len, ptr, len;
-//	
-//	while(1){
-//		OS_Wait(&ModbusReceiveSema);
-//		msg_len = U3_RxMessageSize;
-//		len = ptr; ptr = 0; data_len = msg_len - 2;
-//		if(mb->addr != BROADCAST) state= false;	//if wrong addr
-//		if(mb->cmd == ADDR)	//Set addr command
-//		{
-//			if( len < 5 ) state= false;//short message
-//			crc = ModbusCrc16(ModbusBuf, data_len);//calculate crc
-//			crcptr = &ModbusBuf[data_len];	//pointer to crc in the message
-//			if(((crc&0xFF) == *crcptr) && ((crc>>8) == *(crcptr+1))) //verify crc
-//			{
-//				*data = ModbusBuf[2];//new addr of controller
-//				state= true;
-//			}
-//		}
-//		state= false;
-//	}
-//}
-uint32_t Count10;
+//***********ModbusHndlReceive***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle received from MU port Modbus message, will signal from ModbusPortReception()
 void ModbusHndlReceive(void)//Request Called by App
 {
   ModbusCmd *mb = (ModbusCmd*)ModbusBuf;
   ModbusCmd10 *cmd10 = (ModbusCmd10*)ModbusBuf;
   uint32_t crc;
   uint8_t msg_cmd, *crcptr, data_len, msg_len;
+#ifdef APDEBUG	
+	Count10 = 0;
+#endif	
+	
 	while(1){
 		OS_Wait(&ModbusHndlReceiveSema);
 		ev->ev_reg = 0;
@@ -221,11 +247,11 @@ void ModbusHndlReceive(void)//Request Called by App
 		ModbusMsgSize = 0;
 		crc = ModbusCrc16(ModbusBuf, data_len); //calculate crc
 		crcptr = &ModbusBuf[data_len]; //pointer to crc in the message
-		// Listen for frames addressed only for connected controller or broadcast and valid CRC
+		// Listen for messages addressed only for connected controller or broadcast and valid CRC
 		if( ((mb->addr == ev->ev_addr) || (mb->addr == BROADCAST)) && ((crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1)) ){ 
 			DisableInterrupts();		
 			msg_cmd = mb->cmd;		
-#ifdef DEBUGVIEW		
+#ifdef APDEBUG		
 			DebugModbusBuf[0] = mb->addr;
 			DebugModbusBuf[1] = mb->cmd;
 			DebugModbusBuf[2] = mb->regHi;
@@ -243,10 +269,12 @@ void ModbusHndlReceive(void)//Request Called by App
 			//44   03   C0 A8  00 01  B2 BC
 			//Addr Cmd  Reg    Num    Crc
 			if( (msg_cmd == CMD03) || (msg_cmd == CMD73) ) //multy reg read command
-			{ 
+			{
+#ifdef APDEBUG				
 				if( msg_len < 8 ){
 					ErrorCMD03_73Modbuslog++;//short message
 				}
+#endif
 				ev->ev_len = mb->regNumL << 1; //len always doubled		
 			}
 			//--------------------------------
@@ -254,11 +282,12 @@ void ModbusHndlReceive(void)//Request Called by App
 			//Addr Cmd  Reg    Data   Crc
 			else if( (msg_cmd == CMD06) || (msg_cmd == CMD76) )//one reg write command
 			{
+#ifdef APDEBUG				
 				if( msg_len < 7 ){
 					ErrorCMD06_76Modbuslog++;//short message
 				}
+#endif				
 				ev->ev_len = 2;
-				//if (len==7) {ev->len=1; ev->size=0;} else {ev->len=2; ev->size=1;}//len depends on request len
 				ev->dataptr = &ModbusBuf[4];
 			}
 			//--------------------------------
@@ -266,11 +295,11 @@ void ModbusHndlReceive(void)//Request Called by App
 			//Addr Cmd Reg    Num    Len Data   Crc
 			else if( msg_cmd == CMD10 ) //multy reg write command
 			{
+#ifdef APDEBUG				
 				if( msg_len < 10 ){
 					ErrorCMD10Modbuslog++; //short message
 				}
-				//if (cmd10->len == cmd10->num) {ev->len = cmd10->len; ev->size=0;}//len depends on data len
-				//else {ev->len = cmd10->num<<1; ev->size=1;}
+#endif				
 				ev->ev_len = cmd10->numLo << 1;
 				ev->dataptr = &ModbusBuf[7];
 			}
@@ -279,59 +308,70 @@ void ModbusHndlReceive(void)//Request Called by App
 			//Addr Cmd MEI Data   Crc
 			else if( msg_cmd == CMD43 )
 			{
+#ifdef APDEBUG				
 				if( data_len < 5 ){
 					ErrorCMD43Modbuslog++; //short message
 				}
+#endif				
 				ev->dataptr = &ModbusBuf[2];
 				ev->ev_len = 1;
 			}
 			//-------------------------------
 			else if( msg_cmd == DEBUG )
 			{
+#ifdef APDEBUG				
 				if( data_len < 5 ){
 					ErrorCMDDEBModbuslog++;//short message
 				}
+#endif				
 				ev->ev_debug = ModbusBuf[2];
 			}
 		//-------------------------------
 			else
-			{		
+			{
+#ifdef APDEBUG				
 				ErrorCMDModbuslog++;//unknown command
+#endif				
 			}
 	
 			ev->ev_cmd = msg_cmd;
 			ev->ev_reg |= mb->regHi;
 			ev->ev_reg = ev->ev_reg << 8;
 			ev->ev_reg |= mb->regLo;
-
-//			if(mb->addr == BROADCAST){
-//				; // should keep silence, need to implement
-//			}
 			EnableInterrupts();
 //			if( ev->ev_debug == NEARLOOP ){
 //				OS_Signal(&ModbusPortTxInitSema);
 //			} else {
-				OS_Signal(&TelevisHndlSendSema);
+				OS_Signal(&TelevisHndlSendSema); // signal TelevisSend() to continue handle message
 //			}
 		} else {
-			OS_Signal(&U3_RxInitSema);
+			OS_Signal(&U3_RxInitSema); // signal ModbusPortRxInit() to listen new message
 		}
+#ifdef APDEBUG		
 		Count10++;
+#endif		
 	}
 }
-
+//***********ModbusSend***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Prepare Modbus message to send, thread will signal from TelevisHndlReceive()
 void ModbusSend(void)//Reply Called by App
 {
   uint32_t crc;
   uint8_t msg_cmd, data_len, msg_len;
 	ModbusReply03 *r03 = (ModbusReply03*)ModbusBuf;
+#ifdef APDEBUG	
+	Count11 = 0;
+#endif	
 	
 	while(1){
 		OS_Wait(&ModbusSendSema);
 		r03->addr = ev->ev_addr;
 		msg_cmd = ev->ev_cmd;
 		r03->cmd = msg_cmd;
-#ifdef DEBUGVIEW
+#ifdef APDEBUG
 		DebugModbusBuf[12] = ev->ev_addr;
 		DebugModbusBuf[13] = ev->ev_cmd;
 #endif
@@ -348,17 +388,17 @@ void ModbusSend(void)//Reply Called by App
 				*(&r03->data + (i^1)) = *(ev->dataptr + i);//need to swap bytes
 			}
 			msg_len = data_len + 3;
-#ifdef DEBUGVIEW
-		DebugModbusBuf[14] = ev->ev_len;
-		DebugModbusBuf[15] = r03->len;
-		for(uint32_t i = 0; i < data_len; i++){	
-			DebugModbusBuf[16+i] = *(&r03->data + i);	
-		}
-		DebugModbusBuf[16+data_len] = ':';
-		for(uint32_t i = 0; i < data_len; i++){	
-			DebugModbusBuf[16+data_len+i] = *(ev->dataptr + i);	
-		}
-		DebugModbusBuf[16+data_len+data_len] = ':';
+#ifdef APDEBUG
+			DebugModbusBuf[14] = ev->ev_len;
+			DebugModbusBuf[15] = r03->len;
+			for(uint32_t i = 0; i < data_len; i++){	
+				DebugModbusBuf[16+i] = *(&r03->data + i);	
+			}
+			DebugModbusBuf[16+data_len] = ':';
+			for(uint32_t i = 0; i < data_len; i++){	
+				DebugModbusBuf[16+data_len+i] = *(ev->dataptr + i);	
+			}
+			DebugModbusBuf[16+data_len+data_len] = ':';
 #endif		
 		}
 		//--------------------------------
@@ -366,10 +406,6 @@ void ModbusSend(void)//Reply Called by App
 		//Addr Cmd  Reg    Data   Crc
 		else if( (msg_cmd == CMD06) || (msg_cmd == CMD76) )//Should return the same reply as request
 		{
-			//ModbusReply06 *r06=(ModbusReply06*)ModbusBuf;
-			//r06->reg = ev->reg;
-			//for (i=0; i<2; i++) *(&r06->data+i) = *(ev->dataptr+i);
-			//if(ev->len == 1) len = 5; else 
 			msg_len = 6;
 		}
 		//--------------------------------
@@ -401,6 +437,9 @@ void ModbusSend(void)//Reply Called by App
 		ModbusBuf[msg_len++] = crc >> 8;
 		U3_TxMessageSize = msg_len;
 		OS_Signal(&ModbusPortTxInitSema);
+#ifdef APDEBUG		
+		Count11++;
+#endif		
 	}
 }
 

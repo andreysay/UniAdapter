@@ -34,10 +34,18 @@
 
 #define SOF 0x82		// Televis start of frame(SOF (header))
 
-
-/* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+#ifdef APDEBUG
 uint32_t DebugTelevisBuf[RX_BUFFER_SIZE]; // Buffer for debugging purpose
+// Counters for debugging
+uint32_t CntDeviceFound, CntCMDSend, CountHandleReceive, ErrorCMDTelevislog, ErrorCMD03_073Televislog, ErrorCMD06_076Televislog;
+extern uint32_t Count3;
+extern uint32_t Count4;
+extern uint32_t Count5;
+extern uint32_t Count6;
+extern uint32_t Count7;
+extern uint32_t Count8;
+#endif
 
 /* Initial autoreload value */
 extern __IO uint8_t TIM2_InterruptFlag;
@@ -87,51 +95,72 @@ extern TEvent Event;
 extern TEvent *const ev;
 extern bool DeviceFound;
 
-// Semaphore for TelevisHandleReceive thread
+// Semaphore will use for TelevisHndlReceive() thread
 int32_t TelevisHndlReceiveSema;
-
+// Semaphore will use in TelevisSend() thread
 int32_t TelevisHndlSendSema;
-
+// Semaphore will use in TelevisPortTxInit() thread
 int32_t TelevisPortTxInitSema;
-
+// Semaphore will use in TelevisPortRxInit() thread
 int32_t TelevisPortRxInitSema;
-
+// Semaphore will use in TelevisScan() thread
 int32_t TelevisCtrlScanSema;
 
-uint32_t ErrorCMDTelevislog;
-
+// Variable to store Televis message size
 uint8_t TelevisMessageSize;
 
 // Buffer for Televis message
 uint8_t TelevisBuf[RX_BUFFER_SIZE];
 
 
-extern uint32_t Count3;
+//***********TelevisEventThread100ms***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Event thread which active every 100 milli second 
 void TelevisEventThread100ms(void){
+#ifdef APDEBUG	
 	Count3 = 0;
+#endif	
 	while(1){
 		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
+#ifdef APDEBUG		
 		Count3++;
-	};
+#endif		
+	}
 }
 
-extern uint32_t Count4;
+//***********TelevisEventThread1sec***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Event thread which active every 1 second 
 void TelevisEventThread1sec(void){ 
+#ifdef APDEBUG	
   Count4 = 0;
+#endif	
 	while(1){
 		OS_Wait(&Time1secSemaphore);
 		if(DeviceFound){
 			ToggleLedGreen();
 		}
+#ifdef APDEBUG		
 		Count4++;
-	};
+#endif		
+	}
 }
 
-
-extern uint32_t Count7;
+//***********TelevisPortRxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize index variable, buffer pointer, USART1 interrupts
+// signal TelevisPortReception() for reception
 void TelevisPortRxInit(void)
 {
+#ifdef APDEBUG	
 	Count7 = 0;
+#endif	
 	while(1){
 		OS_Wait(&TelevisPortRxInitSema);
 		/* Initialize index to move on buffer */
@@ -145,14 +174,22 @@ void TelevisPortRxInit(void)
 		/* Enable Error interrupt */
 		LL_USART_EnableIT_ERROR(USART1);
 		OS_Signal(&U1_RxSemaphore);
+#ifdef APDEBUG		
 		Count7++;
+#endif		
 	}
 }
 
-extern uint32_t Count8;
+//***********TelevisPortReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Waiting for data reception from USART1, will signal by USART1 ISR from USART1_IDLE_Callback()
 void TelevisPortReception(void)
 {
+#ifdef APDEBUG	
 	Count8 = 0;
+#endif	
 	uint8_t i;
 	while(1){
 			OS_Wait(&U1_RxSemaphore);
@@ -165,24 +202,33 @@ void TelevisPortReception(void)
 				TelevisMessageSize = U1_RxMessageSize;
 				for(i = 0; i < U1_RxMessageSize; i++){
 					TelevisBuf[i] = U1_RXBufferA[i];
-//					U1_RXBufferA[i] = 0;
+					U1_RXBufferA[i] = 0;
 				}
 				LEDs_off();
 				EnableInterrupts();
-				OS_Signal(&TelevisHndlReceiveSema);
+				OS_Signal(&TelevisHndlReceiveSema); // signal TelevisHndlReceive() to process received message
 			} else {
 				if(!DeviceFound){
-					OS_Signal(&TelevisCtrlScanSema);
+					OS_Signal(&TelevisCtrlScanSema); // signal TelevisScan() in case SCAN process
 				}
 			}
+#ifdef APDEBUG			
 		Count8++;
+#endif			
 	}
 }
 
-extern uint32_t Count5;
+//***********TelevisPortTxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize controller port for transmission, index variable, pointer to buffer and transmission buffer,
+// USART1 with ODD parity
 void TelevisPortTxInit(void)
 {
+#ifdef APDEBUG	
 	Count5 = 0;
+#endif	
 	while(1){
 		OS_Wait(&TelevisPortTxInitSema);
 		DisableInterrupts();
@@ -198,15 +244,23 @@ void TelevisPortTxInit(void)
 			LL_USART_EnableIT_ERROR(USART1);
 		}
 		U1_idxTx = 0;
-		OS_Signal(&U1_TxSemaphore);
+		OS_Signal(&U1_TxSemaphore); // signal TelevisPortSendMsg() to receive message
+#ifdef APDEBUG		
 		Count5++;
+#endif		
 	}
 }
 
-
-extern uint32_t Count6;
+//***********TelevisPortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Send Televis message to connected controller through USART1,
+// first byte will send with ODD parity, after delay 100 microseconds will send other part of message with EVEN parity
 void TelevisPortSendMsg(void){
+#ifdef APDEBUG	
 	Count6 = 0;
+#endif	
 	while(1){
 		OS_Wait(&U1_TxSemaphore);
 		/* Turn ORANGE On at start of transfer : Tx sequence started successfully */
@@ -219,7 +273,7 @@ void TelevisPortSendMsg(void){
 			LL_USART_DisableIT_TXE(USART1);
 			LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_9B, LL_USART_PARITY_EVEN, LL_USART_STOPBITS_1);
 			TTimerDelay(100);
-			OS_Signal(&U1_TxSemaphore);
+			OS_Signal(&U1_TxSemaphore); // signal ownself to continue with EVEN parity
 		} else {
 			if(LL_USART_IsActiveFlag_TC(USART1)){
 				LL_USART_ClearFlag_TC(USART1);
@@ -229,11 +283,17 @@ void TelevisPortSendMsg(void){
 			LL_USART_EnableIT_TXE(USART1);
 			OS_Signal(&TelevisPortRxInitSema); // Signal semaphore to initialize data reception	
 		}
+#ifdef APDEBUG		
 		Count6++;
+#endif		
 	}
 }
 
-//-----------------------------------------------------------
+//***********TelevisCrc16***************
+// returns the CRC of an Televis message
+// Inputs: pointer to Televis message, size of the message
+// Outputs: the CRC
+// Calculate CRC for received Televis message
 static uint32_t TelevisCrc16(const uint8_t *msg_data, uint8_t msg_lenght) 
 {
   uint32_t crc_value = 0xFFFF;
@@ -242,23 +302,26 @@ static uint32_t TelevisCrc16(const uint8_t *msg_data, uint8_t msg_lenght)
 	}
   return crc_value;
 }
-uint32_t CountHandleReceive;
-//-----------------------------------------------------------
+
+//***********TelevisHndlReceive***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle message from controlled by Televis protocol
 void TelevisHndlReceive(void)
 {
   uint32_t crc;
-  uint8_t msg_cmd, data_len, *crcptr, msg_len;
+  uint8_t msg_cmd, data_len, *crcptr;
 	TelevisReadReply *trr = (TelevisReadReply*)TelevisBuf;
 	
 	while(1){
 		OS_Wait(&TelevisHndlReceiveSema);
-		msg_len = TelevisMessageSize;
 		data_len = TelevisMessageSize - 2;
 		msg_cmd = ev->ev_cmd;
 		TelevisMessageSize = 0;
 		crcptr = &TelevisBuf[data_len];//pointer to crc in the message
 		crc = TelevisCrc16(TelevisBuf, data_len);//calculate crc
-#ifdef DEBUGVIEW
+#ifdef APDEBUG
 		DebugTelevisBuf[9] = *crcptr;
 		DebugTelevisBuf[10] = *(crcptr+1);
 		DebugTelevisBuf[11] = crc;
@@ -269,16 +332,18 @@ void TelevisHndlReceive(void)
 		DebugTelevisBuf[16] = trr->t_sender;
 		DebugTelevisBuf[17] = trr->t_len - 2;		
 #endif
-		if(	trr->t_header == 0x82 && ( (crc >> 8) == (*crcptr) || (crc&0xFF) == (*(crcptr+1)) )){
+		if(	trr->t_header == 0x82 && ( (crc >> 8) == (*crcptr) || (crc&0xFF) == (*(crcptr+1)) )){ // check what message has header and right CRC
 			DisableInterrupts();
 			//--------------------------------
 			//82  13  44  31  03  00 00  C2   FE 30 - read response
 			//Hdr Cmd Src Dst Len Id     Data Crc
 			if( (msg_cmd==CMD03) || (msg_cmd==CMD73) )//Read response
 			{
+#ifdef APDEBUG				
 				if (trr->t_cmd != 0x13 || msg_len < 10){
-					ErrorCMDTelevislog++;//short message
+					ErrorCMD03_073Televislog++;//short message
 				}
+#endif				
 				ev->ev_len = trr->t_len - 2;
 				ev->dataptr = &trr->t_data;
 			}
@@ -287,14 +352,15 @@ void TelevisHndlReceive(void)
 			//Hdr Cmd Src Dst Len Crc
 			else if( msg_cmd==CMD06 || msg_cmd==CMD10 || (msg_cmd==CMD76) )//Write response
 			{
+#ifdef APDEBUG				
 				if (trr->t_cmd != 0x05 || msg_len < 7){
-					ErrorCMDTelevislog++;//short message
+					ErrorCMD06_076Televislog++;//short message
 				}
+#endif				
 			}
 			//--------------------------------
 			else if( msg_cmd == CMD43 )//Device ID response
 			{
-			//if (trr->cmd != 0x56 || len < 7) return FALSE;//short message
 				ev->dataptr = &TelevisBuf[5];
 				ev->ev_len = trr->t_len;
 			}
@@ -307,28 +373,36 @@ void TelevisHndlReceive(void)
 					DeviceFound = true;
 				}
 				ev->dataptr = &TelevisBuf[regH];
-				ev->ev_len = 3;//trr->len;
+				ev->ev_len = 3;
 			}
 		//--------------------------------
 			else {
 			//unknown command
+#ifdef APDEBUG				
 				ErrorCMDTelevislog++;
+#endif				
 			}
+#ifdef APDEBUG			
 			CountHandleReceive++;
+#endif			
 			EnableInterrupts();
 			if(DeviceFound && msg_cmd == SCAN){
-				OS_Signal(&TelevisCtrlScanSema);
+				OS_Signal(&TelevisCtrlScanSema); // Signal TelevisScan() in case it in SCAN process
 			} else {
-				OS_Signal(&ModbusSendSema);
+				OS_Signal(&ModbusSendSema); // Signal ModbusSend() to transmit message for MU device
 			}
 		} else {
-			OS_Signal(&U3_RxInitSema);
+			OS_Signal(&U3_RxInitSema); // In case received message is not valid switch to listen message from MU device
 		}
 	}
-
 //  if (ev->debug == FARLOOP2) {Modbus.Send(TelevisBuf, len); return false;}
 }
-//-----------------------------------------------------------
+
+//***********TelevisSend***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Convert message from Modbus to Televis, signal TelevisPortTxInit() to transmit
 void TelevisSend(void)
 {
   uint8_t msg_cmd, msg_len;
@@ -357,7 +431,7 @@ void TelevisSend(void)
 			trr->t_id  = 0;
 			msg_len = 10;
 			
-#ifdef DEBUGVIEW			
+#ifdef APDEBUG			
 			DebugTelevisBuf[0] = msg_cmd;
 			DebugTelevisBuf[1] = trr->t_cmd;		
 			DebugTelevisBuf[3] = trr->t_len;
@@ -374,18 +448,19 @@ void TelevisSend(void)
 		else if( msg_cmd == CMD06 || msg_cmd == CMD10 )
 		{
 			data_len = ev->ev_len;
+#ifdef APDEBUG			
 			if( data_len > 20 ){
 				ErrorCMDTelevislog++; // error
-			} else {
-				twr->t_cmd = 0x93;
-				twr->t_len  = data_len + 2;
-				twr->t_regH = ev->ev_reg >> 8;
-				twr->t_regL = ev->ev_reg;
-				for(uint32_t i = 0; i < data_len; i++){
-					*(&twr->t_data + (i^1)) = *(ev->dataptr + i); //^1 because need to swap bytes
-				}
-				msg_len = data_len + 7;
 			}
+#endif			
+			twr->t_cmd = 0x93;
+			twr->t_len  = data_len + 2;
+			twr->t_regH = ev->ev_reg >> 8;
+			twr->t_regL = ev->ev_reg;
+			for(uint32_t i = 0; i < data_len; i++){
+				*(&twr->t_data + (i^1)) = *(ev->dataptr + i); //^1 because need to swap bytes
+			}
+			msg_len = data_len + 7;
 		}
 		else if( msg_cmd == CMD76 )
 		{
@@ -429,9 +504,13 @@ void TelevisSend(void)
 	}
 }
 
-
-uint32_t CntDeviceFound;
-uint32_t CntCMDSend;
+//***********TelevisScan***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize connected controller address scan by setup Televis scan message and 
+// signal TelevisPortTxInit() to transmit it to connected controller, if responce will received, controller address was found,
+// thread will blocked, MU port reception thread will signaled otherwise will prepare new scan message every 200ms.
 void TelevisScan(void){
 	uint8_t i, msg_len;
 	uint32_t crc, TimeDelay = 5000000;
@@ -446,17 +525,18 @@ void TelevisScan(void){
 		OS_Wait(&TelevisCtrlScanSema);
 		msg_len = 6;
 		if(DeviceFound){
+#ifdef APDEBUG			
 			CntDeviceFound++;
+#endif			
 			OS_Signal(&U3_RxInitSema);
 			OS_Wait(&TelevisCtrlScanSema);
 		} else {
 				// Toggle Green Led indicate that scan operation running
 				ToggleLedGreen();
-				// Setup device address to get responce from controller
+				// Setup address to get responce from controller
 				if(TelevisBuf[receiver]++ > 247){
 					TelevisBuf[receiver] = 1;
 				}
-				CntCMDSend++;
 				Event.ev_addr = TelevisBuf[receiver];
 				Event.ev_cmd = TelevisBuf[cmd];
 				Event.ev_debug = 0;
@@ -466,6 +546,9 @@ void TelevisScan(void){
 				TelevisBuf[msg_len++] = crc & 0xFF;
 				U1_TxMessageSize = msg_len;
 				OS_Signal(&TelevisPortTxInitSema);
+#ifdef APDEBUG				
+				CntCMDSend++;
+#endif
 				OS_Sleep(200);
 		}
 	}
@@ -527,20 +610,6 @@ void TelevisTIM2TimeInit(void)
   /* Configure the NVIC to handle TIM2 update interrupt */
   NVIC_SetPriority(TIM2_IRQn, 0);
   NVIC_EnableIRQ(TIM2_IRQn);
-}
-
-//***********Televis_GetSize***************
-// returns the size of an Televis message
-// Inputs:  pointer to Televis message
-// Outputs: size of the message
-// extracted little Endian from byte 1 and byte 2
-uint32_t Televis_GetSize(uint8_t *pt){
-  uint8_t msb,lsb;
-  uint32_t size;
-  lsb = (uint8_t)pt[1];
-  msb = (uint8_t)pt[2];
-  size = (msb<<8)+lsb;
-  return size;
 }
 
 //-----------------------------------------------------------

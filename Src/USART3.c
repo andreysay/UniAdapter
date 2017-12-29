@@ -106,7 +106,6 @@ void USART3_Init(void){
   */
 void USART3_TransmitComplete_Callback(void)
 {
-	DebugModbusBuf[13] = U3_idxTx;
 	if(U3_idxTx >= U3_TxMessageSize)
   { 
 		U3_idxTx = 0;

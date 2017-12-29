@@ -88,8 +88,10 @@ void BSP_PeriodicTask_Init(void(*task)(void), uint32_t freq, uint8_t priority){l
   /* Start Channel1 */
   if (HAL_TIM_Base_Start_IT(&htim4) != HAL_OK)
   {
+#ifdef APDEBUG		
     /* Starting Error */
     _Error_Handler(__FILE__, __LINE__);
+#endif		
   }
   EndCritical(sr);
 }
@@ -160,10 +162,10 @@ void BSP_PeriodicTask_InitB(void(*task)(void), uint32_t freq, uint8_t priority){
     htim3.Lock = HAL_UNLOCKED;
     
     /* Init the low level hardware : GPIO, CLOCK, NVIC */
-        /* TIM4 clock enable */
+        /* TIM3 clock enable */
     __HAL_RCC_TIM3_CLK_ENABLE();
 
-    /* TIM4 interrupt Init */
+    /* TIM3 interrupt Init */
     HAL_NVIC_SetPriority(TIM3_IRQn, priority, 0);
     HAL_NVIC_EnableIRQ(TIM3_IRQn);
   }
@@ -180,8 +182,10 @@ void BSP_PeriodicTask_InitB(void(*task)(void), uint32_t freq, uint8_t priority){
   /* Start Channel1 */
   if (HAL_TIM_Base_Start_IT(&htim3) != HAL_OK)
   {
+#ifdef APDEBUG		
     /* Starting Error */
     _Error_Handler(__FILE__, __LINE__);
+#endif		
   }
   EndCritical(sr);
 }
@@ -273,7 +277,7 @@ void BSP_PeriodicTask_StopB(void){
 // Input: none
 // Output: none
 // Assumes: BSP_Clock_InitFastest() has been called
-//          so clock = 80/80 = 1 MHz
+//          so clock = 72/72 = 1 MHz
 void BSP_Time_Init(void){long sr;
   sr = StartCritical();
   // ***************** Wide Timer4 initialization *****************

@@ -35,23 +35,17 @@
 /* it can be changed to while(1) if needed */
 #define stop_cpu   __breakpoint(0)
 
-// Counters for debugging
-uint32_t Count3, Count4;
-
-// Semaphore for periodic thread which runs every 100ms
-int32_t Time100msSemaphore;
-// Semaphore for periodic thread which runs every 1 second
-int32_t Time1secSemaphore;
-
 /* Semaphores defined in main_threads.c file */
+extern int32_t Time100msSemaphore;
+extern int32_t Time1secSemaphore;
 // Semaphore for transmit
 extern int32_t U3_RxSemaphore;
 // Semaphore for reception
 extern int32_t U3_TxSemaphore;
-// Semaphore for reception initialisation
+// Semaphore for reception initialization
 extern int32_t U3_RxInitSema;
 
-// Semaphore for Controller port initialisation
+// Semaphore for Controller port initialization
 extern int32_t PortCtrlTxInitSema;
 extern int32_t PortCtrlRxInitSema;
 extern int32_t U1_TxSemaphore;
@@ -69,32 +63,12 @@ extern int32_t ModbusSendSema;
 extern int32_t ModbusHndlReceiveSema;
 extern int32_t ModbusPortTxInitSema;
 
+// Variable to store connected controller Type
+// which will detect by voltage on CFG pin 0 - 400mVolt = Dixel, 3000 - 3300mVolt = Eliwell
 uint32_t ControllerType = Unknown;
-
-/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-
-/* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-
-void EventThread100ms(void){
-	Count3 = 0;
-	while(1){
-		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
-		Count3++;
-	};
-}
-void EventThread1sec(void){ 
-  Count4 = 0;
-	while(1){
-		OS_Wait(&Time1secSemaphore);
-		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
-		HAL_GPIO_TogglePin(GPIOB, LED_GRN_PIN);
-		Count4++;
-	};
-}
 
 
 /* USER CODE END PFP */
@@ -138,7 +112,7 @@ int main(void)
   /* Activate ADC */
   /* Perform ADC activation procedure to make it ready to convert. */
   Activate_ADC();
-	// Detect input voltage from CFG pin
+	// Detect input voltage from CFG pin and setup connected controller type
 	ControllerTypeDetection();
 	// Disable ADC conversion
 	Disable_ADC();
@@ -148,7 +122,6 @@ int main(void)
 	switch(ControllerType){
 		case Dixel:
 			Dixel_Init();
-
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
 			OS_InitSemaphore(&U3_RxInitSema, 1);
@@ -229,11 +202,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-#ifdef DEBUGVIEW		
+#ifdef APDEBUG		
 		stop_cpu;// Should not be here
 #endif
-		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
+		LED_ErrorBlinking(LED_BLINK_ERROR);
   }
 
 }

@@ -3793,7 +3793,7 @@ __STATIC_INLINE void LL_TIM_GenerateEvent_BRK(TIM_TypeDef *TIMx)
   */
 
 #if defined(USE_FULL_LL_DRIVER)
-/** @defgroup TIM_LL_EF_Init Initialisation and deinitialisation functions
+/** @defgroup TIM_LL_EF_Init initialization and deinitialization functions
   * @{
   */
 

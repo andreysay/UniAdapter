@@ -73,20 +73,41 @@ typedef struct ModbusReply10
 }ModbusReply10;
 
 /* Private function prototypes -----------------------------------------------*/
-
+//***********ModbusPortRxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize MU port for data reception, will signal from TelevisScan() after connected controller address found
 void ModbusPortRxInit(void);
-
+//***********ModbusPortReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Wait for data reception from MU trough USART3, will signal from USART3 ISR trough USART3_IDLE_Callback()
 void ModbusPortReception(void);
-
+//***********ModbusPortTxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize variables and fill out buffers for MU port transmittion
 void ModbusPortTxInit(void);
-
+//***********ModbusPortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// transmit data to MU device through USART3
 void ModbusPortSendMsg(void);
-
+//***********ModbusHndlReceive***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle received from MU port Modbus message, will signal from ModbusPortReception()
 void ModbusHndlReceive(void);
-
+//***********ModbusSend***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Prepare Modbus message to send, thread will signal from TelevisHndlReceive()
 void ModbusSend(void);
-
-
-
 #endif /* __MODBUS_H */
 /************************ (C) COPYRIGHT *****END OF FILE****/

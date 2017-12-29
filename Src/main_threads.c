@@ -15,12 +15,22 @@
 #include "ControllerPort.h"
 #include "LED.h"
 
+#ifdef APDEBUG
+// Counters for debugging
+uint32_t Count0, Count1, Count2, Count3, Count4, Count5, Count6, Count7, Count8;
+#endif
+
+// Semaphore for periodic thread which runs every 100ms
+int32_t Time100msSemaphore;
+// Semaphore for periodic thread which runs every 1 second
+int32_t Time1secSemaphore;
+
 // USART3 MU_Port semaphores
 // Semaphore for reception
 int32_t U3_RxSemaphore;
 // Semaphore for transmition
 int32_t U3_TxSemaphore;
-// Semaphore for reception initialisation
+// Semaphore for reception initialization
 int32_t U3_RxInitSema;
 
 /**
@@ -43,9 +53,9 @@ uint8_t U3_TxMessageSize = 0;
 uint8_t U3_RxMessageSize = 0;
 
 // USART1 controller port semaphores
-// Semaphore for Controller port TX mode initialisation
+// Semaphore for Controller port TX mode initialization
 int32_t PortCtrlTxInitSema;
-// Semaphore for Controller port RX mode initialisation
+// Semaphore for Controller port RX mode initialization
 int32_t PortCtrlRxInitSema;
 // Semaphore for transmition
 int32_t U1_TxSemaphore;
@@ -72,11 +82,53 @@ uint8_t *U1_pBufferReception = NULL;
 //Pointer to U1_TXBuffer used in USART1 USART1_TXEmpty_Callback function to handle data transmission
 uint8_t *U1_pBufferTransmit = NULL;
 
-// Counters for debugging
-uint32_t Count0;
+//***********EventThread100ms***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Event thread which active every 100 milli second 
+void EventThread100ms(void){
+#ifdef APDEBUG	
+	Count3 = 0;
+#endif	
+	while(1){
+		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
+#ifdef APDEBUG		
+		Count3++;
+#endif		
+	}
+}
+//***********EventThread1sec***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Event thread which active every 1 second 
+void EventThread1sec(void){ 
+#ifdef APDEBUG	
+  Count4 = 0;
+#endif	
+	while(1){
+		OS_Wait(&Time1secSemaphore);
+		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_TogglePin(GPIOB, LED_GRN_PIN);
+#ifdef APDEBUG		
+		Count4++;
+#endif		
+	};
+}
+
+//***********MU_PortReceptionInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize MU port for data reception, 
+// Must run first to receive command from MU device
+// will signal MU_PortHandleContinuousReception() to continue
 void MU_PortReceptionInit(void)
 {
+#ifdef APDEBUG	
 	Count0 = 0;
+#endif	
 	GPIO_PinState pinDirState;
 	while(1){
 		OS_Wait(&U3_RxInitSema);
@@ -100,14 +152,22 @@ void MU_PortReceptionInit(void)
 		LL_USART_EnableIT_RXNE(USART3);
 		LL_USART_EnableIT_ERROR(USART3);		
 		OS_Signal(&U3_RxSemaphore);
+#ifdef APDEBUG		
 		Count0++;
+#endif		
 	}
 }
 
-uint32_t Count1;
+//***********MU_PortHandleContinuousReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Wait for data reception from MU trough USART3, will signal from USART3 ISR trough USART3_IDLE_Callback()
 void MU_PortHandleContinuousReception(void)
 {
+#ifdef APDEBUG	
 	Count1 = 0;
+#endif	
 	uint8_t i = 0;
 	while(1){
 		OS_Wait(&U3_RxSemaphore);
@@ -131,13 +191,21 @@ void MU_PortHandleContinuousReception(void)
 			EnableInterrupts();
 			OS_Signal(&PortCtrlTxInitSema);
 		}
+#ifdef APDEBUG		
 		Count1++;
+#endif		
 	}
 }
 
-uint32_t Count2;
+//***********MU_PortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// transmit data to MU device through USART3
 void MU_PortSendMsg(void){
+#ifdef APDEBUG	
 	Count2 = 0;
+#endif	
 	GPIO_PinState pinDirState;
 	while(1){
 		OS_Wait(&U3_TxSemaphore);
@@ -152,14 +220,23 @@ void MU_PortSendMsg(void){
 		LL_USART_TransmitData8(USART3, U3_TXBuffer[U3_idxTx++]);
 		/* Enable TXE interrupt */
 		LL_USART_EnableIT_TXE(USART3); 
+#ifdef APDEBUG		
 		Count2++;
+#endif		
 	}
 }
 
-uint32_t Count7;
+//***********CtrlPortRxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize index variable, buffer pointer, USART1 interrupts
+// signal CtrlPortHandleContinuousReception() for reception
 void CtrlPortRxInit(void)
 {
+#ifdef APDEBUG	
 	Count7 = 0;
+#endif	
 	while(1){
 		OS_Wait(&PortCtrlRxInitSema);
 		/* Initialize index to move on buffer */
@@ -173,15 +250,22 @@ void CtrlPortRxInit(void)
 		/* Enable Error interrupt */
 		LL_USART_EnableIT_ERROR(USART1);
 		OS_Signal(&U1_RxSemaphore);
+#ifdef APDEBUG		
 		Count7++;
+#endif		
 	}
 }
 
-uint32_t Count8;
+//***********CtrlPortHandleContinuousReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Waiting for data reception from USART1, will signal by USART1 ISR from USART1_IDLE_Callback()
 void CtrlPortHandleContinuousReception(void)
 {
+#ifdef APDEBUG	
 	Count8 = 0;
-	uint8_t i;
+#endif	
 	while(1){
 			OS_Wait(&U1_RxSemaphore);
 			/* Checks if Buffer full indication has been set */			
@@ -191,7 +275,7 @@ void CtrlPortHandleContinuousReception(void)
 				/* Reset indication */
 				U1_BufferReadyIndication = 0;
 				U3_TxMessageSize = U1_RxMessageSize;
-				for(i = 0; i < U1_RxMessageSize; i++){
+				for(uint8_t i = 0; i < U1_RxMessageSize; i++){
 					U3_TXBuffer[i] = U1_RXBufferA[i];
 					U1_RXBufferA[i] = 0;
 				}
@@ -199,14 +283,22 @@ void CtrlPortHandleContinuousReception(void)
 				EnableInterrupts();
 				OS_Signal(&U3_TxSemaphore);
 			}
+#ifdef APDEBUG			
 		Count8++;
+#endif			
 	}
 }
 
-uint32_t Count5;
+//***********CtrlPortTxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize controller port for transmission, index variable, pointer to buffer and transmission buffer,
 void CtrlPortTxInit(void)
 {
+#ifdef APDEBUG	
 	Count5 = 0;
+#endif	
 	while(1){
 		OS_Wait(&PortCtrlTxInitSema);
 		// buffer pointer initialization
@@ -215,23 +307,25 @@ void CtrlPortTxInit(void)
 				/* Enable Error interrupt */
 			LL_USART_EnableIT_ERROR(USART1);
 		}
-#ifdef RS485		
-		CtrlPortRegistersTxInit();
-#endif
 		OS_Signal(&U1_TxSemaphore);
+#ifdef APDEBUG		
 		Count5++;
+#endif		
 	}
 }
 
 
-uint32_t Count6;
+//***********CtrlPortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Send Modbus message to connected controller through USART1,
 void CtrlPortSendMsg(void){
+#ifdef APDEBUG	
 	Count6 = 0;
+#endif	
 	while(1){
 		OS_Wait(&U1_TxSemaphore);
-#ifdef RS485
-		LL_USART_DisableDirectionRx(USART1);
-#endif
 		/* Turn ORANGE On at start of transfer : Tx sequence started successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
@@ -239,11 +333,13 @@ void CtrlPortSendMsg(void){
 		/* Enable TXE interrupt */
 		LL_USART_EnableIT_TXE(USART1);
 		OS_Signal(&PortCtrlRxInitSema); // Signal semaphore to initialize data reception		
+#ifdef APDEBUG		
 		Count6++;
+#endif		
 	}
 }
 
-
+// Free time counter
 uint32_t Freetime;
 void IdleTask(void){ // dummy task
   Freetime = 0;      // this task cannot block, sleep or kill

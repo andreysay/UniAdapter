@@ -26,13 +26,14 @@ TEvent *const ev = &Event;
 
 // Flag indication to initialize scan to find controller attached
 bool DeviceFound = false;
+// Flag for control controller detection time
+__IO uint16_t ControllerTimeDetection = 0;
 
 /* Variables for ADC conversion data */
 extern __IO uint16_t uhADCxConvertedData;
 extern __IO uint8_t ubAdcGrpRegularUnitaryConvStatus;
 extern __IO uint16_t uhADCxConvertedData_Voltage_mVolt;
 extern __IO uint16_t uhADCxConversionCompleted;
-__IO uint16_t ControllerTimeDetection = 0;
 extern uint32_t ControllerType;
 
 void ControllerTypeDetection(void){
@@ -65,7 +66,10 @@ void ControllerTypeDetection(void){
 			else
 			{
 			/* Error: ADC conversion start could not be performed */
+#ifdef APDEBUG
 				_Error_Handler(__FILE__, __LINE__);
+#endif
+				break;
 			}
 		}
 	}

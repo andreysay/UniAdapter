@@ -17,6 +17,10 @@
 
 /* Private define ------------------------------------------------------------*/
 
+void EventThread1sec(void);
+
+void EventThread100ms(void);
+
 void MU_PortReceptionInit(void);
 
 void MU_PortHandleContinuousReception(void);
