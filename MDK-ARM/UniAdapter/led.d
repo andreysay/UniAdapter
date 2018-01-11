@@ -11,6 +11,7 @@ uniadapter\led.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.
 uniadapter\led.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\led.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\led.o: ../Inc/main.h
+uniadapter\led.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\led.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\led.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\led.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

@@ -55,7 +55,7 @@ extern int32_t U1_RxSemaphore;
 extern int32_t TelevisHndlReceiveSema;
 extern int32_t TelevisPortTxInitSema;
 extern int32_t TelevisPortRxInitSema;
-extern int32_t TelevisCtrlScanSema;
+extern int32_t CtrlScanSema;
 extern int32_t TelevisHndlSendSema;
 
 // link to Modbus.c file
@@ -63,12 +63,21 @@ extern int32_t ModbusSendSema;
 extern int32_t ModbusHndlReceiveSema;
 extern int32_t ModbusPortTxInitSema;
 
+// link to ControllerType.c
+extern bool DeviceFound;
+
 // Variable to store connected controller Type
 // which will detect by voltage on CFG pin 0 - 400mVolt = Dixel, 3000 - 3300mVolt = Eliwell
 uint32_t ControllerType = Unknown;
 
+// Buffer for Televis/Carel and etc messages
+uint8_t ProtocolBuf[RX_BUFFER_SIZE];
+// Variable to store size of received message
+uint32_t ProtocolMsgSize;
+
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
+// link to os.c file
+extern void SystemClock_Config(void);
 
 
 /* USER CODE END PFP */
@@ -121,7 +130,8 @@ int main(void)
 	/* USER CODE BEGIN 2 */
 	switch(ControllerType){
 		case Dixel:
-			Dixel_Init();
+			DeviceFound = true;
+			CtrlPortReg_Init();
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
 			OS_InitSemaphore(&U3_RxInitSema, 1);
@@ -149,11 +159,12 @@ int main(void)
 			OS_Launch(); // doesn't return, interrupts enabled in here
 			break;
 		case Eliwell:
-			Dixel_Init();
-			TelevisTIM2TimeInit();
+			CtrlPortReg_Init();
+			TIM2TimeInit();
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
-			OS_InitSemaphore(&TelevisCtrlScanSema, 1);
+			// Initialize CtrlScanSema to 1 to start run with that thread
+			OS_InitSemaphore(&CtrlScanSema, 1);
 			OS_InitSemaphore(&TelevisPortTxInitSema, 0);
 			OS_InitSemaphore(&U1_TxSemaphore, 0);		
 			OS_InitSemaphore(&TelevisPortRxInitSema, 0);
@@ -165,7 +176,6 @@ int main(void)
 			OS_InitSemaphore(&U3_RxSemaphore, 0);
 			OS_InitSemaphore(&ModbusHndlReceiveSema, 0);
 			OS_InitSemaphore(&TelevisHndlSendSema, 0);
-			OS_InitSemaphore(&Time100msSemaphore, 0);
 			OS_InitSemaphore(&Time1secSemaphore, 0);	
 
 
@@ -188,10 +198,14 @@ int main(void)
 			OS_AddThread(&ModbusPortTxInit, 2);
 			OS_AddThread(ModbusPortSendMsg, 3);
 
-			OS_AddThread(&TelevisEventThread100ms, 4);
-			OS_AddThread(&TelevisEventThread1sec, 4);
+			OS_AddThread(&EventThread1sec, 4);
 			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
 			OS_Launch(); // doesn't return, interrupts enabled in here			
+			break;
+		case CarelEasy:
+			CtrlPortReg_Init();
+			TIM2TimeInit();
+			LL_USART_ConfigHalfDuplexMode(USART1);
 			break;
 		default:
 			EnableInterrupts();

@@ -12,6 +12,7 @@ uniadapter\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx
 uniadapter\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\main.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\main.o: ../Inc/main.h
+uniadapter\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\main.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
@@ -54,7 +55,6 @@ uniadapter\main.o: ../Inc/USART1.h
 uniadapter\main.o: ../Inc/ControllerType.h
 uniadapter\main.o: ../Inc/ControllerPort.h
 uniadapter\main.o: ../Inc/main_threads.h
-uniadapter\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\main.o: ../Inc/Televis.h
 uniadapter\main.o: ../Inc/Command.h
 uniadapter\main.o: ../Inc/Modbus.h

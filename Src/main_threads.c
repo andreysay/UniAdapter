@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : Dixel.c
+  * File Name          : main_threads.c
   * Description        : This file provides code for Send/Receive functions
-  *                      for Dixel controllers.
+  *                      for Dixel or RS485 support controllers.
   ******************************************************************************
   */
 
@@ -19,6 +19,9 @@
 // Counters for debugging
 uint32_t Count0, Count1, Count2, Count3, Count4, Count5, Count6, Count7, Count8;
 #endif
+
+// link to ControllerType.c
+extern bool DeviceFound;
 
 // Semaphore for periodic thread which runs every 100ms
 int32_t Time100msSemaphore;
@@ -109,8 +112,9 @@ void EventThread1sec(void){
 #endif	
 	while(1){
 		OS_Wait(&Time1secSemaphore);
-		HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
-		HAL_GPIO_TogglePin(GPIOB, LED_GRN_PIN);
+		if(DeviceFound){
+			ToggleLedGreen();
+		}
 #ifdef APDEBUG		
 		Count4++;
 #endif		

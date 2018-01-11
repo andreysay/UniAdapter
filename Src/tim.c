@@ -270,6 +270,64 @@ void SetTIM2_Period(uint32_t Period)
   LL_TIM_GenerateEvent_UPDATE(TIM2);
 
 }
+
+//***********T2TimerDelay***************
+// returns none
+// Inputs:  Delay time in microseconds
+// Outputs: none
+// Delay amount of time in microseconds
+void T2TimerDelay(uint32_t mcsTimeDelay){
+	/* Clear the update event flag */
+	TIM2->SR = 0;
+	while(mcsTimeDelay){
+		/* Start the timer counter */
+		TIM2->CR1 |= TIM_CR1_CEN;
+		/* Loop until the update event flag is set */
+		while (!(TIM2->SR & TIM_SR_UIF)){}
+		/* The required time delay has been elapsed */
+		/* Clear the update event flag */
+		TIM2->SR = 0;
+		mcsTimeDelay--;
+	}
+}
+
+
+//***********TIM2TimeInit***************
+// returns none
+// Inputs:  none
+// Outputs: none
+// Initialize TIM2 to get ticks in microseconds
+void TIM2TimeInit(void)
+{
+  /* Enable the timer peripheral clock */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2); 
+  
+  /* Set counter mode */
+  /* Reset value is LL_TIM_COUNTERMODE_UP */
+  LL_TIM_SetCounterMode(TIM2, LL_TIM_COUNTERMODE_UP);
+
+  /* Set the pre-scaler value to have TIM2 counter clock equal to 10 kHz      */
+  /*
+    In this example TIM2 input clock (TIM2CLK)  is set to APB1 clock (PCLK1),
+    since APB1 prescaler is equal to 1.
+      TIM2CLK = PCLK1
+      PCLK1 = HCLK
+      => TIM2CLK = HCLK = SystemCoreClock
+    To get TIM2 counter clock at 1 MHz, the Prescaler is computed as following:
+    Prescaler = (TIM2CLK / TIM2 counter clock) - 1
+    Prescaler = (SystemCoreClock /(2 * 1MHz)) - 1
+  */
+  LL_TIM_SetPrescaler(TIM2, __LL_TIM_CALC_PSC(SystemCoreClock/2, 1000000));
+  
+  /* Set the auto-reload value to have an initial update event frequency of 1 MHz */
+    /* TIM2CLK = SystemCoreClock / (APB prescaler & multiplier)                 */
+	InitialAutoreload = 1U;
+  LL_TIM_SetAutoReload(TIM2, InitialAutoreload);
+  
+  /* Configure the NVIC to handle TIM2 update interrupt */
+  NVIC_SetPriority(TIM2_IRQn, 0);
+  NVIC_EnableIRQ(TIM2_IRQn);
+}
 /* USER CODE END 1 */
 
 /**

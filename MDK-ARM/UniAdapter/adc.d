@@ -12,6 +12,7 @@ uniadapter\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\adc.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\adc.o: ../Inc/main.h
+uniadapter\adc.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

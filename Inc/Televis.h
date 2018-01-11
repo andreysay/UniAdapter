@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "Command.h"
+#include "tim.h"
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -66,30 +67,7 @@ typedef struct TelevisWriteReply
 
 
 /* Private function prototypes -----------------------------------------------*/
-//***********TelevisTIM2TimeInit***************
-// returns none
-// Inputs:  none
-// Outputs: none
-// Initialize TIM2 to get ticks in microseconds
-void TelevisTIM2TimeInit(void);
-//***********TTimerDelay***************
-// returns none
-// Inputs:  Delay time in microseconds
-// Outputs: none
-// Delay amount of time in microseconds
-void TTimerDelay(uint32_t msTimeDelay);
-//***********TelevisEventThread100ms***************
-// returns none
-// Inputs: none
-// Outputs: none
-// Event thread which active every 100 milli second 
-void TelevisEventThread100ms(void);
-//***********TelevisEventThread1sec***************
-// returns none
-// Inputs: none
-// Outputs: none
-// Event thread which active every 1 second 
-void TelevisEventThread1sec(void);
+
 //***********TelevisPortRxInit***************
 // returns none
 // Inputs: none

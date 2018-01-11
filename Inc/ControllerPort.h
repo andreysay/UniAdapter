@@ -40,7 +40,7 @@ void CtrlPortRegistersTxInit(void);
 
 void CtrlPortRegistersRxInit(void);
 
-void Dixel_Init(void);
+void CtrlPortReg_Init(void);
 
 void RS485_Init(void);
 

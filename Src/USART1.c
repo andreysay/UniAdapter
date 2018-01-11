@@ -82,7 +82,70 @@ void USART1_Init(void){
   /* TX/RX direction */
   LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
 
-  /* 8 data bit, 1 start bit, 1 stop bit, no parity */
+  /* 8 data bit, 1 start bit, 2 stop bit, no parity */
+  LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_2);
+
+  /* No Hardware Flow control */
+  /* Reset value is LL_USART_HWCONTROL_NONE */
+  LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
+
+  /* Set Baudrate to 9600 using APB frequency set to 72000000/APB_Div Hz */
+  /* Frequency available for USART peripheral can also be calculated through LL RCC macro */
+  /* Ex :
+      Periphclk = LL_RCC_GetUSARTClockFreq(Instance); or LL_RCC_GetUARTClockFreq(Instance); depending on USART/UART instance
+  
+      In this example, Peripheral Clock is expected to be equal to 72000000/APB_Div Hz => equal to SystemCoreClock/APB_Div
+  */
+  LL_USART_SetBaudRate(USART1, SystemCoreClock/APB_Div1, USARTx_BAUDRATE);
+
+  /* (4) Enable USART *********************************************************/
+  LL_USART_Enable(USART1);
+}
+
+// Initialize the UART1 for 9,600 baud rate (assuming 72 MHz clock),
+// 8 bit word length, no parity bits, two stop bit, single wire communication
+// Input: none
+// Output: none
+void USART1_HalfDuplexInit(void){
+
+  /* (1) Enable GPIO clock and configures the USART pins *********************/
+
+  /* Enable the peripheral clock of GPIO Port */
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
+
+  /* Enable USART peripheral clock *******************************************/
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
+
+  /* Configure Tx Pin as : Alternate function, High Speed, Push pull, Pull up */
+//  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_FLOATING);
+  LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
+
+//  /* Configure Rx Pin as : Input Floating function, High Speed, Pull up */
+//  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_FLOATING);
+//  LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
+//  LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
+	
+	LL_USART_ConfigHalfDuplexMode(USART1);
+
+  /* (2) NVIC Configuration for USART interrupts */
+  /*  - Set priority for USARTx_IRQn */
+  /*  - Enable USARTx_IRQn */
+  NVIC_SetPriority(USART1_IRQn, 0);  
+  NVIC_EnableIRQ(USART1_IRQn);
+
+  /* (3) Configure USART functional parameters ********************************/
+
+  /* Disable USART prior modifying configuration registers */
+  /* Note: Commented as corresponding to Reset value */
+  LL_USART_Disable(USART1);
+
+  /* TX/RX direction */
+  LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
+
+  /* 8 data bit, 1 start bit, 2 stop bit, no parity */
   LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_2);
 
   /* No Hardware Flow control */

@@ -11,6 +11,7 @@ uniadapter\main_threads.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_s
 uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\main_threads.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\main_threads.o: ../Inc/main.h
+uniadapter\main_threads.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\main_threads.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

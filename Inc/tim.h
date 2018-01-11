@@ -59,14 +59,42 @@ extern TIM_HandleTypeDef htim4;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
-
+//***********MX_TIM3_Init***************
+// returns none
+// Inputs:  none
+// Outputs: none
+// Configure TIM3 with HAL for base operations
 void MX_TIM3_Init(void);
+//***********MX_TIM4_Init***************
+// returns none
+// Inputs:  none
+// Outputs: none
+// Configure TIM3 with HAL for base operations
 void MX_TIM4_Init(void);
+//***********Configure_TIM2TimeBase***************
+// returns none
+// Inputs:  none
+// Outputs: none
 // Configure TIM2 for handle LED error blinking
 void  Configure_TIM2TimeBase(uint32_t TIMx_Freq, uint32_t TIMx_UpFreq);
-
+//***********SetTIM2_Period***************
+// returns none
+// Inputs:  none
+// Outputs: none
+// Activate TIM2 for Period value
 void SetTIM2_Period(uint32_t Period);
-
+//***********TelevisTIM2TimeInit***************
+// returns none
+// Inputs:  none
+// Outputs: none
+// Initialize TIM2 to get ticks in microseconds
+void TIM2TimeInit(void);
+//***********TTimerDelay***************
+// returns none
+// Inputs:  Delay time in microseconds
+// Outputs: none
+// Delay amount of time in microseconds
+void T2TimerDelay(uint32_t msTimeDelay);
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */

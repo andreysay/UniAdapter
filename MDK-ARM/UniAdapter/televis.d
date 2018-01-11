@@ -11,6 +11,7 @@ uniadapter\televis.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f
 uniadapter\televis.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\televis.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\televis.o: ../Inc/main.h
+uniadapter\televis.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\televis.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\televis.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\televis.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
@@ -35,10 +36,10 @@ uniadapter\televis.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usart.h
 uniadapter\televis.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_gpio.h
 uniadapter\televis.o: ../Inc/ControllerType.h
 uniadapter\televis.o: ../Inc/main_threads.h
-uniadapter\televis.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\televis.o: ../Inc/os.h
 uniadapter\televis.o: ../Inc/StartUp.h
 uniadapter\televis.o: ../Inc/ErrorHandler.h
 uniadapter\televis.o: ../Inc/LED.h
 uniadapter\televis.o: ../Inc/Televis.h
 uniadapter\televis.o: ../Inc/Command.h
+uniadapter\televis.o: ../Inc/tim.h

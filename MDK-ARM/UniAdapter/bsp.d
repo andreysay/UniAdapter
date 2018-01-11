@@ -3,6 +3,7 @@ uniadapter\bsp.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 uniadapter\bsp.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\bsp.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\bsp.o: ../Inc/main.h
+uniadapter\bsp.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\bsp.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\bsp.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\bsp.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h

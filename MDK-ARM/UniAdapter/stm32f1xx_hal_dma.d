@@ -2,6 +2,7 @@ uniadapter\stm32f1xx_hal_dma.o: ../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ha
 uniadapter\stm32f1xx_hal_dma.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\stm32f1xx_hal_dma.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\stm32f1xx_hal_dma.o: ../Inc/main.h
+uniadapter\stm32f1xx_hal_dma.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\stm32f1xx_hal_dma.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\stm32f1xx_hal_dma.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\stm32f1xx_hal_dma.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h

@@ -1,5 +1,6 @@
 uniadapter\modbus.o: ..\Src\Modbus.c
 uniadapter\modbus.o: ../Inc/main.h
+uniadapter\modbus.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\modbus.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\modbus.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\modbus.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
@@ -45,5 +46,4 @@ uniadapter\modbus.o: ../Inc/os.h
 uniadapter\modbus.o: ../Inc/ControllerType.h
 uniadapter\modbus.o: ../Inc/LED.h
 uniadapter\modbus.o: ../Inc/Modbus.h
-uniadapter\modbus.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\modbus.o: ../Inc/Command.h

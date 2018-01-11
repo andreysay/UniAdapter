@@ -13,8 +13,10 @@
 #include "stdint.h"
 #include "stm32f1xx_hal.h"
 
-#define Dixel 1
-#define Eliwell 2
+#define Dixel 		1
+#define Eliwell 	2
+#define CarelEasy 3
+#define CarelMPX	4
 #define Unknown 65535
 #define LED_ADC_BLINK_ERROR 3
 

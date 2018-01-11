@@ -4,6 +4,7 @@ uniadapter\controllerport.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 uniadapter\controllerport.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\controllerport.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\controllerport.o: ../Inc/main.h
+uniadapter\controllerport.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\controllerport.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\controllerport.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\controllerport.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h

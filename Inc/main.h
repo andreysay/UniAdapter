@@ -10,6 +10,7 @@
   /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
+#include "stdbool.h"
 #include "stm32f1xx_ll_tim.h"
 /* USER CODE END Includes */
 
@@ -79,7 +80,7 @@
 #define RX_BUFFER_SIZE   32
 #define RX_MESSAGE_SIZE		8
 
-//#define APDEBUG	1
+#define APDEBUG	1
 
 void _Error_Handler(char *, int);
 

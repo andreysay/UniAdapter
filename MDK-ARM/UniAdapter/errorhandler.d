@@ -3,6 +3,7 @@ uniadapter\errorhandler.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 uniadapter\errorhandler.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 uniadapter\errorhandler.o: ../Inc/stm32f1xx_hal_conf.h
 uniadapter\errorhandler.o: ../Inc/main.h
+uniadapter\errorhandler.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 uniadapter\errorhandler.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
 uniadapter\errorhandler.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\errorhandler.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h

@@ -30,7 +30,7 @@ void RS485_Init(void){
 	HAL_GPIO_WritePin(GPIO_EnaB, PIN_EnaB, CtrlPortRegisters.EnaB);
 }
 
-void Dixel_Init(void){
+void CtrlPortReg_Init(void){
 	CtrlPortRegisters.RxA   =	GPIO_PIN_RESET;
 	CtrlPortRegisters.TxB   =	GPIO_PIN_RESET;
 	CtrlPortRegisters.TxA   =	GPIO_PIN_SET;
