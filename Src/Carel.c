@@ -66,12 +66,16 @@ extern int32_t U3_RxInitSema;
 extern uint8_t U1_RXBufferA[]; // defined in main_threads.c file
 extern uint8_t U1_TXBuffer[]; // defined in main_threads.c file
 
+// link Modbus.c file
+extern int32_t ModbusSendSema;
+
 int32_t CarelHndlReceiveSema;
+int32_t CarelHndlSendSema;
 
 // Carel indexs symbols
-#define header	 	0 // SOF(header) index
-#define address		1 // cmd index
-#define cmd				2 // sender address index
+#define carel_header	 	0 // SOF(header) index
+#define carel_address		1 // cmd index
+#define carel_cmd				2 // sender address index
 
 
 // Carel indexs symbols
@@ -100,7 +104,7 @@ static void CarelCRC(uint8_t* msg, uint8_t size){
 
 }
 
-//***********CtrlPortTxInit***************
+//***********CarelPortTxInit***************
 // returns none
 // Inputs: none
 // Outputs: none
@@ -110,8 +114,23 @@ void CarelPortTxInit(void)
 #ifdef APDEBUG	
 	Count5 = 0;
 #endif	
+	GPIO_PinState pin_RxA_State;
+	GPIO_PinState pin_TxB_State;
+	GPIO_PinState pin_TxA_State;
 	while(1){
 		OS_Wait(&PortCtrlTxInitSema);
+		pin_RxA_State = HAL_GPIO_ReadPin(GPIO_RxA, PIN_RxA);
+		if(pin_RxA_State != GPIO_PIN_SET){
+			HAL_GPIO_WritePin(GPIO_RxA, PIN_RxA, GPIO_PIN_SET);
+		}
+		pin_TxB_State = HAL_GPIO_ReadPin(GPIO_TxB, PIN_TxB);
+		if(pin_TxB_State != GPIO_PIN_SET){
+			HAL_GPIO_WritePin(GPIO_TxB, PIN_TxB, GPIO_PIN_SET);
+		}
+		pin_TxA_State = HAL_GPIO_ReadPin(GPIO_TxA, PIN_TxA);
+		if(pin_TxA_State != GPIO_PIN_RESET){
+			HAL_GPIO_WritePin(GPIO_TxA, PIN_TxA, GPIO_PIN_RESET);
+		}		
 		DisableInterrupts();
 		for(uint32_t i = 0; i < U1_TxMessageSize; i++){
 			U1_TXBuffer[i] = ProtocolBuf[i];
@@ -131,7 +150,7 @@ void CarelPortTxInit(void)
 }
 
 
-//***********CtrlPortSendMsg***************
+//***********CarelPortSendMsg***************
 // returns none
 // Inputs: none
 // Outputs: none
@@ -156,7 +175,7 @@ void CarelPortSendMsg(void){
 	}
 }
 
-//***********CtrlPortRxInit***************
+//***********CarelPortRxInit***************
 // returns none
 // Inputs: none
 // Outputs: none
@@ -166,9 +185,9 @@ void CarelPortRxInit(void)
 {
 #ifdef APDEBUG	
 	Count7 = 0;
-#endif	
+#endif
 	while(1){
-		OS_Wait(&PortCtrlRxInitSema);
+		OS_Wait(&PortCtrlRxInitSema);			
 		/* Initialize index to move on buffer */
 		U1_idxRx = 0;
 		// buffer pointer initialization
@@ -186,7 +205,7 @@ void CarelPortRxInit(void)
 	}
 }
 
-//***********CtrlPortHandleContinuousReception***************
+//***********CarelPortReception***************
 // returns none
 // Inputs: none
 // Outputs: none
@@ -207,7 +226,7 @@ void CarelPortReception(void)
 				ProtocolMsgSize = U1_RxMessageSize;
 				for(uint8_t i = 0; i < U1_RxMessageSize; i++){
 					ProtocolBuf[i] = U1_RXBufferA[i];
-					U1_RXBufferA[i] = 0;
+//					U1_RXBufferA[i] = 0;
 				}
 				LEDs_off();
 				EnableInterrupts();
@@ -223,6 +242,37 @@ void CarelPortReception(void)
 	}
 }
 
+//***********CarelHndlReceived***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle message by Carel protocol
+void CarelHndlReceived(void)
+{
+  uint32_t crc;
+  uint8_t msg_cmd, data_len, *crcptr, msg_len;
+
+	while(1){
+		OS_Wait(&CarelHndlReceiveSema);
+		msg_len = ProtocolMsgSize;
+		data_len = ProtocolMsgSize - 2;
+		msg_cmd = ev->ev_cmd;
+		ProtocolMsgSize = 0;
+		
+		if( msg_cmd == CSCAN ){
+			if(!DeviceFound){
+				DeviceFound = true;
+			}
+		}
+		if(DeviceFound && msg_cmd == CSCAN){
+			OS_Signal(&CtrlScanSema); // Signal TelevisScan() in case it in SCAN process
+		} else {
+			OS_Signal(&ModbusSendSema); // Signal ModbusSend() to transmit message for MU device
+		}		
+
+	}		
+}
+
 //***********CarelScan***************
 // returns none
 // Inputs: none
@@ -236,6 +286,7 @@ void CarelScan(void){
 	for(i = 0; i < 6; i++){
 		ProtocolBuf[i] = CarelScanFrame[i];
 	}
+	ProtocolBuf[carel_address] = 0x30;
 	LED_GreenOn();
 	// Delay for 5 sec in case when controller power on 
 	T2TimerDelay(TimeDelay);
@@ -252,11 +303,11 @@ void CarelScan(void){
 				// Toggle Green Led indicate that scan operation running
 				ToggleLedGreen();
 				// Setup address to get responce from controller
-				if(ProtocolBuf[address]++ > 207){
-					ProtocolBuf[address] = 1;
+				if(ProtocolBuf[carel_address]++ > 207){
+					ProtocolBuf[carel_address] = 0x31;
 				}
-				Event.ev_addr = ProtocolBuf[address];
-				Event.ev_cmd = ProtocolBuf[cmd];
+				Event.ev_addr = ProtocolBuf[carel_address];
+				Event.ev_cmd = ProtocolBuf[carel_cmd];
 				Event.ev_debug = 0;
 				Event.dataptr = NULL;
 				CarelCRC(ProtocolBuf, msg_len);

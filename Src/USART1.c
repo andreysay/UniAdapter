@@ -25,7 +25,9 @@ extern __IO uint8_t U1_RxMessageSize; // defined in main_threads.c file
 extern uint8_t U1_TxMessageSize; // defined in main_threads.c file
 extern uint32_t ControllerType;
 
-__IO uint8_t Televis1stByteFlag = 1;
+	GPIO_PinState pin_RxA_State;
+	GPIO_PinState pin_TxB_State;
+	GPIO_PinState pin_TxA_State;
 
 
 //------------UART1_Init------------
@@ -102,55 +104,20 @@ void USART1_Init(void){
   LL_USART_Enable(USART1);
 }
 
-// Initialize the UART1 for 9,600 baud rate (assuming 72 MHz clock),
-// 8 bit word length, no parity bits, two stop bit, single wire communication
+// Initialize the UART1 for 19,200 baud rate (assuming 72 MHz clock),
+// 8 bit word length, no parity bits, one stop bit, single wire communication
 // Input: none
 // Output: none
-void USART1_HalfDuplexInit(void){
-
-  /* (1) Enable GPIO clock and configures the USART pins *********************/
-
-  /* Enable the peripheral clock of GPIO Port */
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
-
-  /* Enable USART peripheral clock *******************************************/
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
-
-  /* Configure Tx Pin as : Alternate function, High Speed, Push pull, Pull up */
-//  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_FLOATING);
-  LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
-  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_PUSHPULL);
-  LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
-
-//  /* Configure Rx Pin as : Input Floating function, High Speed, Pull up */
-//  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_FLOATING);
-//  LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
-//  LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
-	
-	LL_USART_ConfigHalfDuplexMode(USART1);
-
-  /* (2) NVIC Configuration for USART interrupts */
-  /*  - Set priority for USARTx_IRQn */
-  /*  - Enable USARTx_IRQn */
-  NVIC_SetPriority(USART1_IRQn, 0);  
-  NVIC_EnableIRQ(USART1_IRQn);
-
+void USART1_CarelEasyInit(void){
   /* (3) Configure USART functional parameters ********************************/
 
   /* Disable USART prior modifying configuration registers */
   /* Note: Commented as corresponding to Reset value */
   LL_USART_Disable(USART1);
 
-  /* TX/RX direction */
-  LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
-
   /* 8 data bit, 1 start bit, 2 stop bit, no parity */
-  LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_2);
+  LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-  /* No Hardware Flow control */
-  /* Reset value is LL_USART_HWCONTROL_NONE */
-  LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
 
   /* Set Baudrate to 9600 using APB frequency set to 72000000/APB_Div Hz */
   /* Frequency available for USART peripheral can also be calculated through LL RCC macro */
@@ -159,7 +126,7 @@ void USART1_HalfDuplexInit(void){
   
       In this example, Peripheral Clock is expected to be equal to 72000000/APB_Div Hz => equal to SystemCoreClock/APB_Div
   */
-  LL_USART_SetBaudRate(USART1, SystemCoreClock/APB_Div1, USARTx_BAUDRATE);
+  LL_USART_SetBaudRate(USART1, SystemCoreClock/APB_Div1, USARTx_Carel_BAUDRATE);
 
   /* (4) Enable USART *********************************************************/
   LL_USART_Enable(USART1);
@@ -185,11 +152,24 @@ void USART1_TransmitComplete_Callback(void)
 		HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, CtrlPortRegisters.EnaTx);
 		LL_USART_EnableDirectionRx(USART1);
 #endif
+		if(ControllerType == CarelEasy){
+			pin_RxA_State = HAL_GPIO_ReadPin(GPIO_RxA, PIN_RxA);
+			if(pin_RxA_State != GPIO_PIN_RESET){
+				HAL_GPIO_WritePin(GPIO_RxA, PIN_RxA, GPIO_PIN_RESET);
+			}
+			pin_TxB_State = HAL_GPIO_ReadPin(GPIO_TxB, PIN_TxB);
+			if(pin_TxB_State != GPIO_PIN_SET){
+				HAL_GPIO_WritePin(GPIO_TxB, PIN_TxB, GPIO_PIN_SET);
+			}
+			pin_TxA_State = HAL_GPIO_ReadPin(GPIO_TxA, PIN_TxA);
+			if(pin_TxA_State != GPIO_PIN_SET){
+				HAL_GPIO_WritePin(GPIO_TxA, PIN_TxA, GPIO_PIN_SET);
+			}	
+		}
     /* Turn ORANGE Off at end of transfer : Tx sequence completed successfully */
 		LEDs_off();
 		/* Initializes Buffer indication : */
 		U1_BufferReadyIndication = 0;
-		Televis1stByteFlag = 1;
   }
 }
 

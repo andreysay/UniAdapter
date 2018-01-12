@@ -14,6 +14,14 @@
 #include "LED.h"
 #include "Modbus.h"
 
+// Modbus indexs symbols
+#define modbus_address		0
+#define modbus_function		1
+#define modbus_regHi			2
+#define modbus_regLo			3
+#define modbus_valHi			4
+#define modbus_valLo			5
+
 #ifdef APDEBUG
 uint8_t DebugModbusBuf[64]; // Buffer for debugging purpose
 // counters for errors debuging
@@ -29,8 +37,6 @@ uint32_t Count9, Count10, Count11;
 uint8_t ModbusBuf[RX_BUFFER_SIZE];
 // Variable for storing Modbus message size
 uint32_t ModbusMsgSize;
-// 
-//int32_t ModbusReceiveSema;
 // Semaphore will use in ModbusHndlReceive() for thread management
 int32_t ModbusHndlReceiveSema;
 // Semaphore will use in ModBusSend() for thread management
@@ -60,6 +66,9 @@ extern uint8_t U3_TXBuffer[]; // defined in main_threads.c file
 
 // link to Televis.c
 extern int32_t TelevisHndlSendSema;
+
+// link to Carel.c
+extern int32_t CarelHndlSendSema;
 
 /* Private function prototypes -----------------------------------------------*/
 static uint32_t ModbusCrc16(const uint8_t *msg_data, uint8_t msg_len);
@@ -352,6 +361,74 @@ void ModbusHndlReceive(void)//Request Called by App
 #endif		
 	}
 }
+
+//***********ModbusCarelHndlRcvd***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle received from MU port Modbus message, will signal from ModbusPortReception()
+void ModbusCarelHndlRcvd(void)//Request Called by App
+{
+  uint32_t crc;
+  uint8_t msg_cmd, *crcptr, data_len, msg_len;
+#ifdef APDEBUG	
+	Count10 = 0;
+#endif	
+	
+	while(1){
+		OS_Wait(&ModbusHndlReceiveSema);
+		ev->ev_reg = 0;
+		msg_len = ModbusMsgSize;
+		data_len = msg_len - 2;
+		ModbusMsgSize = 0;
+		crc = ModbusCrc16(ModbusBuf, data_len); //calculate crc
+		crcptr = &ModbusBuf[data_len]; //pointer to crc in the message
+		// Listen for messages addressed only for connected controller or broadcast and valid CRC
+		if( ((ModbusBuf[modbus_address] == ev->ev_addr) || (ModbusBuf[modbus_address] == BROADCAST)) && ((crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1)) ){ 
+			DisableInterrupts();		
+			msg_cmd = ModbusBuf[modbus_function];		
+			if( (msg_cmd == CMD03) || (msg_cmd == CMD73) ) //multy reg read command
+			{
+	
+			}
+			else if( (msg_cmd == CMD06) || (msg_cmd == CMD76) )//one reg write command
+			{		
+
+			}
+			else if( msg_cmd == CMD10 ) //multy reg write command
+			{		
+
+			}
+			else if( msg_cmd == CMD43 )
+			{		
+
+			}
+			//-------------------------------
+			else if( msg_cmd == DEBUG )
+			{
+
+			}
+		//-------------------------------
+			else
+			{
+			
+			}
+	
+			ev->ev_cmd = msg_cmd;
+			ev->ev_reg |= ModbusBuf[modbus_regHi];
+			ev->ev_reg = ev->ev_reg << 8;
+			ev->ev_reg |= ModbusBuf[modbus_regLo];
+			EnableInterrupts();
+			OS_Signal(&CarelHndlSendSema);
+		} else {
+			OS_Signal(&U3_RxInitSema); // signal ModbusPortRxInit() to listen new message
+		}
+#ifdef APDEBUG		
+		Count10++;
+#endif		
+	}
+}
+
 //***********ModbusSend***************
 // returns none
 // Inputs: none

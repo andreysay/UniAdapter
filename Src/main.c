@@ -24,6 +24,7 @@
 #include "main_threads.h"
 #include "Televis.h"
 #include "Modbus.h"
+#include "Carel.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -63,8 +64,11 @@ extern int32_t ModbusSendSema;
 extern int32_t ModbusHndlReceiveSema;
 extern int32_t ModbusPortTxInitSema;
 
-// link to ControllerType.c
+// link to ControllerType.c file
 extern bool DeviceFound;
+
+// link to Carel.c file
+extern int32_t CarelHndlReceiveSema;
 
 // Variable to store connected controller Type
 // which will detect by voltage on CFG pin 0 - 400mVolt = Dixel, 3000 - 3300mVolt = Eliwell
@@ -132,8 +136,12 @@ int main(void)
 		case Dixel:
 			DeviceFound = true;
 			CtrlPortReg_Init();
+		  /* TRIGGER INITIALIZATION CODE BEGIN */
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
+			/* TRIGGER INITIALIZATION CODE END */
+		
+			/* SEMAPHORE INITIALIZATION CODE BEGIN */
 			OS_InitSemaphore(&U3_RxInitSema, 1);
 			OS_InitSemaphore(&U3_RxSemaphore, 0);
 			OS_InitSemaphore(&U3_TxSemaphore, 0);
@@ -143,7 +151,9 @@ int main(void)
 			OS_InitSemaphore(&U1_RxSemaphore, 0);
 			OS_InitSemaphore(&PortCtrlTxInitSema, 0);
 			OS_InitSemaphore(&U1_TxSemaphore, 0);
-	
+			/* SEMAPHORE INITIALIZATION CODE END */
+		
+			/* THREADs INITIALIZATION CODE BEGIN */
 			OS_AddThread(&MU_PortReceptionInit, 2);
 			OS_AddThread(&MU_PortHandleContinuousReception, 3);
 		
@@ -157,12 +167,17 @@ int main(void)
 			OS_AddThread(&EventThread1sec, 4);
 			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
 			OS_Launch(); // doesn't return, interrupts enabled in here
+			/* THREADs INITIALIZATION CODE END */
 			break;
 		case Eliwell:
 			CtrlPortReg_Init();
 			TIM2TimeInit();
+			/* TRIGGER INITIALIZATION CODE BEGIN */
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
+			/* TRIGGER INITIALIZATION CODE END */
+		
+			/* SEMAPHORE INITIALIZATION CODE BEGIN */
 			// Initialize CtrlScanSema to 1 to start run with that thread
 			OS_InitSemaphore(&CtrlScanSema, 1);
 			OS_InitSemaphore(&TelevisPortTxInitSema, 0);
@@ -177,9 +192,9 @@ int main(void)
 			OS_InitSemaphore(&ModbusHndlReceiveSema, 0);
 			OS_InitSemaphore(&TelevisHndlSendSema, 0);
 			OS_InitSemaphore(&Time1secSemaphore, 0);	
+			/* SEMAPHORE INITIALIZATION CODE END */
 
-
-	
+			/* THREADs INITIALIZATION CODE BEGIN */
 			OS_AddThread(&TelevisScan, 2);
 		
 			OS_AddThread(&TelevisPortTxInit, 2);
@@ -200,12 +215,44 @@ int main(void)
 
 			OS_AddThread(&EventThread1sec, 4);
 			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
-			OS_Launch(); // doesn't return, interrupts enabled in here			
+			OS_Launch(); // doesn't return, interrupts enabled in here	
+			/* THREADs INITIALIZATION CODE END */
 			break;
 		case CarelEasy:
 			CtrlPortReg_Init();
 			TIM2TimeInit();
-			LL_USART_ConfigHalfDuplexMode(USART1);
+			USART1_CarelEasyInit();
+			/* TRIGGER INITIALIZATION CODE BEGIN */
+			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
+			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
+			/* TRIGGER INITIALIZATION CODE END */
+		
+			/* SEMAPHORE INITIALIZATION CODE BEGIN */
+			// Initialize CtrlScanSema to 1 to start run with that thread
+			OS_InitSemaphore(&CtrlScanSema, 1);
+			OS_InitSemaphore(&TelevisPortTxInitSema, 0);
+			OS_InitSemaphore(&U1_TxSemaphore, 0);
+			OS_InitSemaphore(&PortCtrlRxInitSema, 0);
+			OS_InitSemaphore(&U1_RxSemaphore, 0);
+			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
+			OS_InitSemaphore(&U3_RxInitSema, 0);
+			/* SEMAPHORE INITIALIZATION CODE END */
+		
+			/* THREADs INITIALIZATION CODE BEGIN */
+			OS_AddThread(&CarelScan, 2);
+		
+			OS_AddThread(&CarelPortTxInit, 2);
+			OS_AddThread(&CarelPortSendMsg, 3);
+			
+			OS_AddThread(&CarelPortRxInit, 2);			
+			OS_AddThread(&CarelPortReception, 3);
+			
+			OS_AddThread(&CarelHndlReceived, 2);
+			
+			OS_AddThread(&EventThread1sec, 4);
+			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
+			OS_Launch(); // doesn't return, interrupts enabled in here		
+			/* THREADs INITIALIZATION CODE END */
 			break;
 		default:
 			EnableInterrupts();

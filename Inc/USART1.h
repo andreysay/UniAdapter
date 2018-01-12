@@ -18,16 +18,22 @@
 #define USARTx_RX_PIN                 LL_GPIO_PIN_10
 #define USARTx_RX_GPIO_PORT           GPIOA
 #define USARTx_BAUDRATE 9600
+#define USARTx_Carel_BAUDRATE 19200
 #define APB_Div1 1
 
 /* USER CODE END Private defines */
 
 //------------UART_Init------------
 // Initialize the UART for 9,600 baud rate (assuming 72 MHz clock),
-// 8 bit word length, no parity bits, one stop bit
+// 8 bit word length, no parity bits, two stop bit
 // Input: none
 // Output: none
 void USART1_Init(void);
+// Initialize the UART1 for 19,200 baud rate (assuming 72 MHz clock),
+// 8 bit word length, no parity bits, one stop bit, single wire communication
+// Input: none
+// Output: none
+void USART1_CarelEasyInit(void);
 
 
 #endif /* __USART1_H */

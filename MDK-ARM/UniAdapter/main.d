@@ -58,3 +58,4 @@ uniadapter\main.o: ../Inc/main_threads.h
 uniadapter\main.o: ../Inc/Televis.h
 uniadapter\main.o: ../Inc/Command.h
 uniadapter\main.o: ../Inc/Modbus.h
+uniadapter\main.o: ../Inc/Carel.h

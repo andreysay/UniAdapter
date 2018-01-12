@@ -11,7 +11,45 @@
 /* Private define ------------------------------------------------------------*/
 
 
-
+//***********CarelScan***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize connected controller address scan by setup Carel protocol scan message and 
+// signal CarelPortTxInit() to transmit it to connected controller, if responce will received, controller address was found,
+// thread will blocked, MU port reception thread will signaled otherwise will prepare new scan message every 200ms.
+void CarelScan(void);
+//***********CarelPortTxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize controller port for transmission, index variable, pointer to buffer and transmission buffer.
+void CarelPortTxInit(void);
+//***********CarelPortSendMsg***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Send Modbus message to connected controller through USART1,
+void CarelPortSendMsg(void);
+//***********CarelPortRxInit***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Initialize index variable, buffer pointer, USART1 interrupts
+// signal CtrlPortHandleContinuousReception() for reception
+void CarelPortRxInit(void);
+//***********CarelPortReception***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Waiting for data reception from USART1, will signal by USART1 ISR from USART1_IDLE_Callback()
+void CarelPortReception(void);
+//***********CarelHndlReceived***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle message by Carel protocol
+void CarelHndlReceived(void);
 
 
 

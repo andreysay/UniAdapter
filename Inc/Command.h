@@ -9,6 +9,8 @@
 #define __COMMAND_H
 
 /* Private define ------------------------------------------------------------*/
+
+// Modbus/Televis protocol commands
 #define CMD03    0x03
 #define CMD06    0x06
 #define CMD10    0x10
@@ -18,6 +20,10 @@
 #define SCAN     0xD6
 #define DEBUG    0xD6
 #define ADDR     0xDD
+
+// Carel protocol commands
+#define CSCAN		0x3F
+
 #define FARLOOP1 1
 #define FARLOOP2 2
 #define NEARLOOP 3
