@@ -123,7 +123,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGTARM</Key>
-          <Name>(1010=499,58,949,614,0)(1007=105,136,292,410,0)(1008=1122,326,1498,561,0)(1009=1314,313,1572,900,0)</Name>
+          <Name>(1010=499,58,949,614,0)(1007=105,136,292,410,0)(1008=1122,326,1498,561,0)(1009=1239,78,1497,665,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -150,9 +150,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>84</LineNumber>
+          <LineNumber>86</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134220626</Address>
+          <Address>134220786</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -161,7 +161,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>..\Src\ControllerType.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\UniAdapter\../Src/ControllerType.c\84</Expression>
+          <Expression>\\UniAdapter\../Src/ControllerType.c\86</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -358,62 +358,62 @@
         <Ww>
           <count>38</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TelevisCtrlScanSema</ItemText>
+          <ItemText>CntDeviceFound,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>39</count>
           <WinNumber>1</WinNumber>
-          <ItemText>CntDeviceFound,0x0A</ItemText>
+          <ItemText>Event</ItemText>
         </Ww>
         <Ww>
           <count>40</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Event</ItemText>
+          <ItemText>CntCMDSend,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>41</count>
           <WinNumber>1</WinNumber>
-          <ItemText>CntCMDSend,0x0A</ItemText>
+          <ItemText>CountHandleReceive,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>42</count>
           <WinNumber>1</WinNumber>
-          <ItemText>CountHandleReceive,0x0A</ItemText>
+          <ItemText>U1_pBufferTransmit</ItemText>
         </Ww>
         <Ww>
           <count>43</count>
           <WinNumber>1</WinNumber>
-          <ItemText>U1_pBufferTransmit</ItemText>
+          <ItemText>DeviceFound</ItemText>
         </Ww>
         <Ww>
           <count>44</count>
           <WinNumber>1</WinNumber>
-          <ItemText>DeviceFound</ItemText>
+          <ItemText>CntDeviceFound,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>45</count>
           <WinNumber>1</WinNumber>
-          <ItemText>CntDeviceFound,0x0A</ItemText>
+          <ItemText>regH</ItemText>
         </Ww>
         <Ww>
           <count>46</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TelevisBuf</ItemText>
+          <ItemText>TelevisPortTxInitSema</ItemText>
         </Ww>
         <Ww>
           <count>47</count>
           <WinNumber>1</WinNumber>
-          <ItemText>regH</ItemText>
+          <ItemText>TelevisHndlReceiveSema</ItemText>
         </Ww>
         <Ww>
           <count>48</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TelevisPortTxInitSema</ItemText>
+          <ItemText>TelevisPortRxInitSema</ItemText>
         </Ww>
         <Ww>
           <count>49</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TelevisHndlReceiveSema</ItemText>
+          <ItemText>ModbusHndlReceiveSema</ItemText>
         </Ww>
         <Ww>
           <count>50</count>
@@ -423,97 +423,117 @@
         <Ww>
           <count>51</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ModbusHndlReceiveSema</ItemText>
+          <ItemText>ModbusSendSema</ItemText>
         </Ww>
         <Ww>
           <count>52</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TelevisPortRxInitSema</ItemText>
+          <ItemText>ModbusBuf</ItemText>
         </Ww>
         <Ww>
           <count>53</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ModbusSendSema</ItemText>
+          <ItemText>DebugModbusBuf</ItemText>
         </Ww>
         <Ww>
           <count>54</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ModbusBuf</ItemText>
+          <ItemText>DebugTelevisBuf</ItemText>
         </Ww>
         <Ww>
           <count>55</count>
           <WinNumber>1</WinNumber>
-          <ItemText>DebugModbusBuf</ItemText>
+          <ItemText>U3_pBufferTransmit</ItemText>
         </Ww>
         <Ww>
           <count>56</count>
           <WinNumber>1</WinNumber>
-          <ItemText>DebugTelevisBuf</ItemText>
+          <ItemText>Count9</ItemText>
         </Ww>
         <Ww>
           <count>57</count>
           <WinNumber>1</WinNumber>
-          <ItemText>U3_pBufferTransmit</ItemText>
+          <ItemText>Count10</ItemText>
         </Ww>
         <Ww>
           <count>58</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Count9</ItemText>
+          <ItemText>ErrorCMDModbuslog</ItemText>
         </Ww>
         <Ww>
           <count>59</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Count10</ItemText>
+          <ItemText>ErrorCMD03_73Modbuslog</ItemText>
         </Ww>
         <Ww>
           <count>60</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMDModbuslog</ItemText>
+          <ItemText>ErrorCMD06_76Modbuslog</ItemText>
         </Ww>
         <Ww>
           <count>61</count>
           <WinNumber>1</WinNumber>
-          <ItemText>TelevisBuf[receiver]</ItemText>
+          <ItemText>ErrorCMD10Modbuslog</ItemText>
         </Ww>
         <Ww>
           <count>62</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMD03_73Modbuslog</ItemText>
+          <ItemText>ErrorCMD43Modbuslog</ItemText>
         </Ww>
         <Ww>
           <count>63</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMD06_76Modbuslog</ItemText>
+          <ItemText>ErrorCMDDEBModbuslog</ItemText>
         </Ww>
         <Ww>
           <count>64</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMD10Modbuslog</ItemText>
+          <ItemText>ErrorCMD03_073Televislog</ItemText>
         </Ww>
         <Ww>
           <count>65</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMD43Modbuslog</ItemText>
+          <ItemText>ErrorCMD06_076Televislog</ItemText>
         </Ww>
         <Ww>
           <count>66</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMDDEBModbuslog</ItemText>
+          <ItemText>ErrorCMDTelevislog</ItemText>
         </Ww>
         <Ww>
           <count>67</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMD03_073Televislog</ItemText>
+          <ItemText>ProtocolBuf</ItemText>
         </Ww>
         <Ww>
           <count>68</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMD06_076Televislog</ItemText>
+          <ItemText>Count11</ItemText>
         </Ww>
         <Ww>
           <count>69</count>
           <WinNumber>1</WinNumber>
-          <ItemText>ErrorCMDTelevislog</ItemText>
+          <ItemText>ANA_ARRAY</ItemText>
+        </Ww>
+        <Ww>
+          <count>70</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>INT_ARRAY</ItemText>
+        </Ww>
+        <Ww>
+          <count>71</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>DIG_ARRAY</ItemText>
+        </Ww>
+        <Ww>
+          <count>72</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>PortCtrlTxInitSema</ItemText>
+        </Ww>
+        <Ww>
+          <count>73</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>U1_TxMessageSize</ItemText>
         </Ww>
       </WatchWindow1>
       <MemoryWindow1>

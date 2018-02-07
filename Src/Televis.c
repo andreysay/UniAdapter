@@ -36,7 +36,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 #ifdef APDEBUG
-uint32_t DebugTelevisBuf[RX_BUFFER_SIZE]; // Buffer for debugging purpose
+uint32_t DebugTelevisBuf[MAX_BUFFER_SIZE]; // Buffer for debugging purpose
 // Counters for debugging
 uint32_t CntDeviceFound, CntCMDSend, CountHandleReceive, ErrorCMDTelevislog, ErrorCMD03_073Televislog, ErrorCMD06_076Televislog;
 extern uint32_t Count3;
@@ -88,7 +88,6 @@ extern int32_t Time1secSemaphore;
 
 // link to Modbus.c file
 extern int32_t ModbusSendSema;
-//extern uint8_t ModbusBuf[];
 
 // link to ControllerType.c
 extern TEvent Event;

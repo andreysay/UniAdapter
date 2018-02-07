@@ -279,7 +279,6 @@ void OS_Signal(int32_t *semPt){
 			pt = pt->next;
 		}
 		pt->BlockPt = 0; // wakeup this one
-//		pt->Priority = 0; // Run that thread in next Scheduler call
 	}
 	EnableInterrupts();
 }

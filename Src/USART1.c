@@ -25,9 +25,9 @@ extern __IO uint8_t U1_RxMessageSize; // defined in main_threads.c file
 extern uint8_t U1_TxMessageSize; // defined in main_threads.c file
 extern uint32_t ControllerType;
 
-	GPIO_PinState pin_RxA_State;
-	GPIO_PinState pin_TxB_State;
-	GPIO_PinState pin_TxA_State;
+GPIO_PinState pin_RxA_State;
+GPIO_PinState pin_TxB_State;
+GPIO_PinState pin_TxA_State;
 
 
 //------------UART1_Init------------
@@ -180,16 +180,25 @@ void USART1_TransmitComplete_Callback(void)
   */
 void USART1_TXEmpty_Callback(void)
 {
-  if(U1_idxTx >= (U1_TxMessageSize - 1))
-  {
+  if(U1_TxMessageSize > 1){
+		if(U1_idxTx >= (U1_TxMessageSize - 1))
+		{
+			/* Disable TXE interrupt */
+			LL_USART_DisableIT_TXE(USART1);
+    
+			/* Enable TC interrupt */
+			LL_USART_EnableIT_TC(USART1);
+		
+		}
+		/* Fill DR with a new char */
+		LL_USART_TransmitData8(USART1, U1_pBufferTransmit[U1_idxTx++]);
+	} else {
     /* Disable TXE interrupt */
     LL_USART_DisableIT_TXE(USART1);
     
     /* Enable TC interrupt */
     LL_USART_EnableIT_TC(USART1);
   }
-  /* Fill DR with a new char */
-  LL_USART_TransmitData8(USART1, U1_pBufferTransmit[U1_idxTx++]);
 }
 
 /**
@@ -208,7 +217,7 @@ void USART1_Reception_Callback(void)
 	U1_pBufferReception[U1_idxRx++] = LL_USART_ReceiveData8(USART1);
 
 	// check that we're not overflow buffer size
-	if(U1_idxRx >= (RX_BUFFER_SIZE - 1)){
+	if(U1_idxRx >= (MAX_BUFFER_SIZE - 1)){
 		U1_BufferReadyIndication = 1;
 	/* Save received data size */
 		U1_RxMessageSize = U1_idxRx;		
@@ -225,7 +234,7 @@ void USART1_Reception_Callback(void)
   * @retval None
   */
 void USART1_IDLE_Callback(void){
-	if(U1_idxRx >= 2){ // If recived 2 bytes or more, otherwise it uncomplete message   
+//	if(U1_idxRx >= 2){ // If recived 2 bytes or more, otherwise it uncomplete message   Disabled 30.01.18 for Carel testing
 		/* Idle detected, Buffer full indication has been set */
 		U1_BufferReadyIndication = 1;
 		/* Save received data size */
@@ -234,7 +243,7 @@ void USART1_IDLE_Callback(void){
 		U1_idxRx = 0;
 		/* Signal thread that data received */
 		OS_Signal(&U1_RxSemaphore);
-	}
+//	}
 		/* Clear IDLE status */
 	LL_USART_ClearFlag_IDLE(USART1);	
 }

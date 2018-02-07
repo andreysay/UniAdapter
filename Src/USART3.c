@@ -127,16 +127,24 @@ void USART3_TransmitComplete_Callback(void)
   */
 void USART_TXEmpty_Callback(void)
 {
-  if(U3_idxTx >= (U3_TxMessageSize - 1))
-  {
-    /* Disable TXE interrupt */
-    LL_USART_DisableIT_TXE(USART3);
+	if(U3_TxMessageSize > 1){
+		if(U3_idxTx >= (U3_TxMessageSize - 1))
+		{
+			/* Disable TXE interrupt */
+			LL_USART_DisableIT_TXE(USART3);
     
-    /* Enable TC interrupt */
-    LL_USART_EnableIT_TC(USART3);
-  }
-  /* Fill DR with a new char */
-  LL_USART_TransmitData8(USART3, U3_pBufferTransmit[U3_idxTx++]);
+			/* Enable TC interrupt */
+			LL_USART_EnableIT_TC(USART3);
+		}
+		/* Fill DR with a new char */
+		LL_USART_TransmitData8(USART3, U3_pBufferTransmit[U3_idxTx++]);
+	} else {
+		/* Disable TXE interrupt */
+		LL_USART_DisableIT_TXE(USART3);
+    
+		/* Enable TC interrupt */
+		LL_USART_EnableIT_TC(USART3);		
+	}
 }
 
 /**
@@ -154,7 +162,7 @@ void USART3_Reception_Callback(void)
   /* Read Received character. RXNE flag is cleared by reading of DR register */
   U3_pBufferReception[U3_idxRx++] = LL_USART_ReceiveData8(USART3);
 	// Check that we're not owerflow buffer size
-	if(U3_idxRx >= (RX_BUFFER_SIZE - 1)){	
+	if(U3_idxRx >= (MAX_BUFFER_SIZE - 1)){	
 		U3_idxRx = 0;
 	}
 }
@@ -167,7 +175,7 @@ void USART3_Reception_Callback(void)
   * @retval None
   */
 void USART3_IDLE_Callback(void){
-	if(U3_idxRx < RX_BUFFER_SIZE){
+	if(U3_idxRx < MAX_BUFFER_SIZE){
 		/* Idle detected, Buffer full indication has been set */
 		U3_BufferReadyIndication = 1;
 		/* Save received data size */

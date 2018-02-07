@@ -77,7 +77,9 @@ void ControllerTypeDetection(void){
 	if(uhADCxConvertedData_Voltage_mVolt > 3000 && uhADCxConvertedData_Voltage_mVolt <= 3300){
 		ControllerType = Eliwell;
 	} else if (uhADCxConvertedData_Voltage_mVolt > 0 && uhADCxConvertedData_Voltage_mVolt < 400){
-			ControllerType = Dixel;
+		ControllerType = Dixel;
+	} else if (uhADCxConvertedData_Voltage_mVolt > 700 && uhADCxConvertedData_Voltage_mVolt < 1000){
+		ControllerType = CarelEasy;
 	} else {
 			ControllerType = Unknown;
 	}

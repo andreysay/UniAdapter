@@ -50,6 +50,16 @@ void CarelPortReception(void);
 // Outputs: none
 // Handle message by Carel protocol
 void CarelHndlReceived(void);
+//***********CarelSend***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Convert message from Modbus to Carel
+void CarelSend(void);
+
+void readCarelCtrlENQ(void);
+
+void readCarelCtrlACK(void);
 
 
 

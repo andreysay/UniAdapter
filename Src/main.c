@@ -69,13 +69,16 @@ extern bool DeviceFound;
 
 // link to Carel.c file
 extern int32_t CarelHndlReceiveSema;
+extern int32_t CarelHndlSendSema;
+extern int32_t ReadCarelENQSema;
+extern int32_t ReadCarelACKSema;
 
 // Variable to store connected controller Type
 // which will detect by voltage on CFG pin 0 - 400mVolt = Dixel, 3000 - 3300mVolt = Eliwell
 uint32_t ControllerType = Unknown;
 
 // Buffer for Televis/Carel and etc messages
-uint8_t ProtocolBuf[RX_BUFFER_SIZE];
+uint8_t ProtocolBuf[MAX_BUFFER_SIZE];
 // Variable to store size of received message
 uint32_t ProtocolMsgSize;
 
@@ -236,6 +239,15 @@ int main(void)
 			OS_InitSemaphore(&U1_RxSemaphore, 0);
 			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
 			OS_InitSemaphore(&U3_RxInitSema, 0);
+			OS_InitSemaphore(&U3_RxSemaphore, 0);
+			OS_InitSemaphore(&U3_TxSemaphore, 0);					
+			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
+			OS_InitSemaphore(&CarelHndlSendSema, 0);
+			OS_InitSemaphore(&ReadCarelENQSema, 0);
+			OS_InitSemaphore(&ReadCarelACKSema, 0);
+			OS_InitSemaphore(&ModbusSendSema, 0);
+			OS_InitSemaphore(&ModbusPortTxInitSema, 0);
+			OS_InitSemaphore(&ModbusHndlReceiveSema, 0);
 			/* SEMAPHORE INITIALIZATION CODE END */
 		
 			/* THREADs INITIALIZATION CODE BEGIN */
@@ -243,12 +255,25 @@ int main(void)
 		
 			OS_AddThread(&CarelPortTxInit, 2);
 			OS_AddThread(&CarelPortSendMsg, 3);
+			OS_AddThread(&CarelSend, 3);
 			
 			OS_AddThread(&CarelPortRxInit, 2);			
 			OS_AddThread(&CarelPortReception, 3);
 			
-			OS_AddThread(&CarelHndlReceived, 2);
+			OS_AddThread(&CarelHndlReceived, 3);
+			OS_AddThread(&CarelSend, 3);
+			OS_AddThread(&readCarelCtrlENQ, 4);
+			OS_AddThread(&readCarelCtrlACK, 4);
+
 			
+			OS_AddThread(&ModbusPortRxInit, 2);
+			OS_AddThread(&ModbusPortReception, 3);
+			OS_AddThread(&ModbusCarelHndlRcvd, 3);
+			
+			OS_AddThread(&ModbusSendCarel, 3);
+			OS_AddThread(&ModbusPortTxInit, 2);
+			OS_AddThread(ModbusPortSendMsg, 3);
+
 			OS_AddThread(&EventThread1sec, 4);
 			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
 			OS_Launch(); // doesn't return, interrupts enabled in here		

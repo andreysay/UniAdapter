@@ -22,6 +22,8 @@ uint32_t Count0, Count1, Count2, Count3, Count4, Count5, Count6, Count7, Count8;
 
 // link to ControllerType.c
 extern bool DeviceFound;
+// link to Carel.c
+extern int32_t CarelHndlSendSema;
 
 // Semaphore for periodic thread which runs every 100ms
 int32_t Time100msSemaphore;
@@ -39,8 +41,8 @@ int32_t U3_RxInitSema;
 /**
   * @brief RX/TX buffers for storing received data through USART3
   */
-uint8_t U3_RXBuffer[RX_BUFFER_SIZE];
-uint8_t U3_TXBuffer[RX_BUFFER_SIZE];
+uint8_t U3_RXBuffer[MAX_BUFFER_SIZE];
+uint8_t U3_TXBuffer[MAX_BUFFER_SIZE];
 //Pointer to U3_RXBuffer used in USART3.c USART3_Reception_Callback function to handle data reception
 uint8_t *U3_pBufferReception = NULL;
 //Pointer to U3_TXBuffer used in USART3.c USART3_TXEmpty_Callback function to handle data transmission
@@ -68,8 +70,8 @@ int32_t U1_RxSemaphore;
 /**
   * @brief RX/TX buffers and semaphores for storing received data through USART1
   */
-uint8_t U1_RXBufferA[RX_BUFFER_SIZE];
-uint8_t U1_TXBuffer[RX_BUFFER_SIZE];
+uint8_t U1_RXBufferA[MAX_BUFFER_SIZE];
+uint8_t U1_TXBuffer[MAX_BUFFER_SIZE];
 // RX buffer ready indication
 __IO uint32_t     U1_BufferReadyIndication;
 // Tx/Rx message size variable
@@ -110,10 +112,17 @@ void EventThread1sec(void){
 #ifdef APDEBUG	
   Count4 = 0;
 #endif	
+	uint32_t Count10Sec = 0;
+	
 	while(1){
 		OS_Wait(&Time1secSemaphore);
 		if(DeviceFound){
 			ToggleLedGreen();
+			if(Count10Sec > 10){
+				OS_Signal(&CarelHndlSendSema);
+				Count10Sec = 0;
+			}
+			Count10Sec++;
 		}
 #ifdef APDEBUG		
 		Count4++;

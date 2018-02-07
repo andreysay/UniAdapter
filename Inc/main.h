@@ -77,8 +77,9 @@
 #define PIN_EnaB					GPIO_OUT_PA15_Pin
 #define GPIO_EnaB					GPIO_OUT_PA15_GPIO_Port
 /* USER CODE END Private defines */
-#define RX_BUFFER_SIZE   32
-#define RX_MESSAGE_SIZE		8
+#define RX_BUFFER_SIZE   		32
+#define RX_MESSAGE_SIZE			8
+#define MAX_BUFFER_SIZE 	256
 
 #define APDEBUG	1
 

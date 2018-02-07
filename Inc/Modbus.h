@@ -17,7 +17,7 @@
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
-
+#define ModbusADUSize 256
 //----------------------------------------------
 typedef struct ModbusCmd //Read Holding Regs
 {
@@ -72,6 +72,7 @@ typedef struct ModbusReply10
 	uint8_t numLo;
 }ModbusReply10;
 
+
 /* Private function prototypes -----------------------------------------------*/
 //***********ModbusPortRxInit***************
 // returns none
@@ -103,11 +104,23 @@ void ModbusPortSendMsg(void);
 // Outputs: none
 // Handle received from MU port Modbus message, will signal from ModbusPortReception()
 void ModbusHndlReceive(void);
+//***********ModbusCarelHndlRcvd***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Handle received from MU port Modbus message, will signal from ModbusPortReception()
+void ModbusCarelHndlRcvd(void);
 //***********ModbusSend***************
 // returns none
 // Inputs: none
 // Outputs: none
 // Prepare Modbus message to send, thread will signal from TelevisHndlReceive()
 void ModbusSend(void);
+//***********ModbusSendCarel***************
+// returns none
+// Inputs: none
+// Outputs: none
+// Prepare Modbus message to send, thread will signal from CarelHndlReceive()
+void ModbusSendCarel(void);
 #endif /* __MODBUS_H */
 /************************ (C) COPYRIGHT *****END OF FILE****/
