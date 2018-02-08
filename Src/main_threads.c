@@ -118,7 +118,7 @@ void EventThread1sec(void){
 		OS_Wait(&Time1secSemaphore);
 		if(DeviceFound){
 			ToggleLedGreen();
-			if(Count10Sec > 10){
+			if(Count10Sec > 60){
 				OS_Signal(&CarelHndlSendSema);
 				Count10Sec = 0;
 			}

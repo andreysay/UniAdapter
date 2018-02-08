@@ -31,6 +31,7 @@
 #define STX		0x02 // start of text
 #define ETX		0x03 // end of text
 #define ENQ		0x05 // enquiry
+#define ACK		0x06 // acknowlege
 #define DIG_VAR		'D'
 #define ANA_VAR		'A'
 #define INT_VAR		'I'
@@ -38,6 +39,8 @@
 #define RANA_VAR	'S'
 #define RINT_VAR	'U'
 #define FREQ			'F'
+#define RX_VAR		'x'
+#define RV_VAR		'V'
 #define DREQ		0x3F
 
 #define FARLOOP1 1

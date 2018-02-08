@@ -75,22 +75,26 @@ int32_t ReadCarelENQSema;
 int32_t ReadCarelACKSema;
 
 // Local flags
+static bool deviceScanFlag = false;
 static bool valuesReadFlag = false;
 static bool sendENQ_Flag = false;
 static bool sendACK_Flag = false;
+static bool sendDREQ_Flag = false;
+static bool sendF_Flag = false;
 
 // Carel indexs symbols
 #define carel_header	 					0 // SOF(header) index
 #define carel_address						1 // sender address index
-#define carel_DREQ							2 // cmd index 
-#define carel_var_type_index 		2 // index for variable type		
-#define carel_var_index					3	// index for carel variable index
+#define carel_REQ								2 // cmd index 		
+#define carel_regs							3	// index for carel variable index
+#define carel_etx								4 // index end of text symbol
 
 
 // Carel protocol symbols
 #define DIG_ARRAY_SIZE 199
 #define INT_ARRAY_SIZE 127
 #define ANA_ARRAY_SIZE 127
+#define DEVICE_PARAM_SIZE 16
 
 // Array to store DIG(digital variable) values from Carel controller. Array indexies correspond digit variable index by formula variable_index = array_index + 1
 int16_t DIG_ARRAY[DIG_ARRAY_SIZE];
@@ -98,6 +102,8 @@ int16_t DIG_ARRAY[DIG_ARRAY_SIZE];
 int32_t INT_ARRAY[INT_ARRAY_SIZE];
 // Array to store ANA(analog variable) values from Carel controller Array indexies correspond analog variable index by formula variable_index = array_index + 1
 int32_t ANA_ARRAY[ANA_ARRAY_SIZE];
+
+int32_t CAREL_DEVICE_PARAM[DEVICE_PARAM_SIZE];
 
 //*************message and message fragments**********
 // Device request command 
@@ -108,15 +114,6 @@ const uint8_t CarelScanFrame[] = {
 	ETX, // 
 	0x00, // CRC_Hi
 	0x00 // CRC_Lo
-};
-// ACK responce
-const uint8_t cmdACK[] = {
-	0x06
-};
-// Enquire command
-const uint8_t cmdENQ[] = {
-	0x05,
-	0x00
 };
 
 
@@ -281,7 +278,7 @@ void CarelPortReception(void)
 				if(!DeviceFound){
 					OS_Signal(&CtrlScanSema); // signal CarelScan() in case SCAN process
 				} else if(sendACK_Flag){
-					OS_Signal(&ReadCarelENQSema);
+					OS_Signal(&ReadCarelACKSema);
 				} else {
 					
 				}
@@ -313,9 +310,13 @@ void CarelHndlReceived(void)
 				DeviceFound = true;
 			}
 		}
-		if(DeviceFound && msg_cmd == DREQ){
+		if(DeviceFound && msg_cmd == DREQ && deviceScanFlag){
 			OS_Signal(&CtrlScanSema); // Signal CarelScan() in case it in SCAN process
-		} else if(DeviceFound && msg_cmd == ENQ){
+		} else if(DeviceFound && msg_cmd == DREQ && sendDREQ_Flag){ 
+			OS_Signal(&ReadCarelACKSema);
+		} else if(DeviceFound && msg_cmd == FREQ && sendF_Flag){	
+			OS_Signal(&ReadCarelACKSema);
+		} else if(DeviceFound && msg_cmd == ENQ && sendENQ_Flag){				
 			OS_Signal(&ReadCarelACKSema);
 		}	else {
 			OS_Signal(&ModbusSendSema); // Signal ModbusSend() to transmit message for MU device
@@ -396,51 +397,59 @@ void CarelSend(void)
 		if(!valuesReadFlag){
 			OS_Signal(&ReadCarelENQSema);
 			valuesReadFlag = true;
+			sendDREQ_Flag = true;
 		}
 	}
 }
 
 static void sendReadDREQ(void){
-	ProtocolBuf[0] = STX;
-	ProtocolBuf[1] = ev->ev_addr;
-	ProtocolBuf[2] = DREQ;
-	ProtocolBuf[3] = 0x30;
-	ProtocolBuf[4] = ETX;
+	ProtocolBuf[carel_header] = STX;
+	ProtocolBuf[carel_address] = ev->ev_addr;
+	ProtocolBuf[carel_REQ] = ev->ev_cmd = DREQ;
+	ProtocolBuf[carel_regs] = 0x30;
+	ProtocolBuf[carel_etx] = ETX;
 	U1_TxMessageSize = ProtocolMsgSize = 7;
 	CarelCRC(&ProtocolBuf[0], ProtocolMsgSize);
 }
 
 static void sendRead_F(void){
-	ProtocolBuf[0] = STX;
-	ProtocolBuf[1] = ev->ev_addr;
-	ProtocolBuf[2] = FREQ;
-	ProtocolBuf[3] = 0x31;
-	ProtocolBuf[4] = ETX;
+	ProtocolBuf[carel_header] = STX;
+	ProtocolBuf[carel_address] = ev->ev_addr;
+	ProtocolBuf[carel_REQ] = ev->ev_cmd = FREQ;
+	ProtocolBuf[carel_regs] = 0x31;
+	ProtocolBuf[carel_etx] = ETX;
 	U1_TxMessageSize = ProtocolMsgSize = 7;
 	CarelCRC(&ProtocolBuf[0], ProtocolMsgSize);	
 }
 
 static void sendENQ(void){
-	ev->ev_cmd = ENQ;
-	ProtocolBuf[0] = ENQ;
+	ProtocolBuf[0] = ev->ev_cmd = ENQ;
 	ProtocolBuf[1] = ev->ev_addr;
 	U1_TxMessageSize = ProtocolMsgSize = 2;
-	sendENQ_Flag = true;
-	sendACK_Flag = false;
 }
 
 static void sendACK(){
-	ProtocolBuf[0] = 0x06;
+	ProtocolBuf[0] = ACK;
 	U1_TxMessageSize = ProtocolMsgSize = 1;
-	sendACK_Flag = true;
-	sendENQ_Flag = false;
 }
 
 void readCarelCtrlENQ(void){
 	while(1){
 		OS_Wait(&ReadCarelENQSema);
-		OS_Sleep(50);
-		sendENQ();
+		if(sendDREQ_Flag){
+			sendReadDREQ();
+		}
+		if(sendF_Flag){
+			sendRead_F();
+		}
+		if(sendENQ_Flag){
+			OS_Sleep(50);
+			sendENQ();
+		}
+		if(sendACK_Flag){
+			OS_Sleep(50);
+			sendACK();
+		}
 		OS_Signal(&PortCtrlTxInitSema);
 	}
 }
@@ -453,9 +462,13 @@ void readCarelCtrlACK(void){
 	
 	while(1){
 		OS_Wait(&ReadCarelACKSema);
-		if(ProtocolBuf[0]){
+ 		if(ProtocolBuf[0]){
 			DisableInterrupts();
-			correctCRC = CarelCRC_check(&ProtocolBuf[0], ProtocolMsgSize);
+			if(ProtocolBuf[0] == ACK){
+				correctCRC = false;
+			} else {
+				correctCRC = CarelCRC_check(&ProtocolBuf[0], ProtocolMsgSize);
+			}
 			if( correctCRC ){
 				varType = ProtocolBuf[2];
 				varIndex = ProtocolBuf[3] - 0x30;
@@ -484,15 +497,44 @@ void readCarelCtrlACK(void){
 							correctIndexFlag = false;
 						}
 						break;
+					case RX_VAR:
+						CAREL_DEVICE_PARAM[0] = (ProtocolBuf[5] << 8) | ProtocolBuf[6]; // Calculate Carel device HWid
+						CAREL_DEVICE_PARAM[1] = (ProtocolBuf[9] << 8) | ProtocolBuf[10]; // ???
+						CAREL_DEVICE_PARAM[2] = (ProtocolBuf[17] << 8) | ProtocolBuf[18]; // Calculate Carel device HWid
+						CAREL_DEVICE_PARAM[3] = ((ProtocolBuf[20] - 0x30) << 8) | (ProtocolBuf[22] - 0x30); // Calculate Carel device FWid
+						break;
+					case RV_VAR:
+						
+						break;
 					default:
 						break;
 				}
 			}
 			EnableInterrupts();
-			if(correctIndexFlag){
-				OS_Sleep(50);
-				sendACK();
-				OS_Signal(&PortCtrlTxInitSema);
+			if( sendDREQ_Flag ){
+				sendF_Flag = true;
+				sendDREQ_Flag = false;
+				sendENQ_Flag = false;
+				sendACK_Flag = false;
+				OS_Signal(&ReadCarelENQSema);
+			} else if( sendF_Flag ){
+				sendENQ_Flag = true;
+				sendF_Flag = false;
+				sendDREQ_Flag = false;
+				sendACK_Flag = false;
+				OS_Signal(&ReadCarelENQSema);
+			} else if( sendENQ_Flag ){
+				sendACK_Flag = true;
+				sendENQ_Flag = false;
+				sendF_Flag = false;
+				sendDREQ_Flag = false;
+				OS_Signal(&ReadCarelENQSema);
+			}	else if( sendACK_Flag ){
+				sendENQ_Flag = true;
+				sendACK_Flag = false;
+				sendF_Flag = false;
+				sendDREQ_Flag = false;
+				OS_Signal(&ReadCarelENQSema);
 			} else {
 				valuesReadFlag = false;
 				OS_Signal(&CarelHndlSendSema);
@@ -526,6 +568,7 @@ void CarelScan(void){
 		OS_Wait(&CtrlScanSema);
 		msg_len = 6;
 		if(DeviceFound){
+			deviceScanFlag = false;
 #ifdef APDEBUG			
 			CntDeviceFound++;
 #endif			
@@ -533,12 +576,13 @@ void CarelScan(void){
 		} else {
 				// Toggle Green Led indicate that scan operation running
 				ToggleLedGreen();
+				deviceScanFlag = true;
 				// Setup address to get responce from controller
 				if(ProtocolBuf[carel_address]++ > 254){
 					ProtocolBuf[carel_address] = 0x31;
 				}
 				Event.ev_addr = ProtocolBuf[carel_address];
-				Event.ev_cmd = ProtocolBuf[carel_DREQ];
+				Event.ev_cmd = ProtocolBuf[carel_REQ];
 				Event.ev_debug = 0;
 				Event.dataptr = NULL;
 				CarelCRC(ProtocolBuf, msg_len);
