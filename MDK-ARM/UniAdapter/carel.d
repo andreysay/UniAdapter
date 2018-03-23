@@ -1,6 +1,7 @@
 uniadapter\carel.o: ..\Src\Carel.c
 uniadapter\carel.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 uniadapter\carel.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+uniadapter\carel.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 uniadapter\carel.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usart.h
 uniadapter\carel.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\carel.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
@@ -35,5 +36,7 @@ uniadapter\carel.o: ../Inc/Command.h
 uniadapter\carel.o: ../Inc/tim.h
 uniadapter\carel.o: ../Inc/os.h
 uniadapter\carel.o: ../Inc/ControllerType.h
+uniadapter\carel.o: ../Inc/ControllerPort.h
 uniadapter\carel.o: ../Inc/LED.h
 uniadapter\carel.o: ../Inc/StartUp.h
+uniadapter\carel.o: ../Inc/Carel.h

@@ -7,12 +7,16 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stdlib.h"
 #include "main.h"
 #include "usart.h"
 #include "ControllerType.h"
 #include "os.h"
 #include "LED.h"
+#include "Carel.h"
 #include "Modbus.h"
+
+#define stop_cpu1   __breakpoint(1)
 
 // Modbus indexs symbols
 #define modbus_address		0
@@ -21,6 +25,8 @@
 #define modbus_regLo			3
 #define modbus_valHi			4
 #define modbus_valLo			5
+#define modbus_bytecount	2
+#define modbus_startdata	3
 
 #ifdef APDEBUG
 uint8_t DebugModbusBuf[64]; // Buffer for debugging purpose
@@ -69,6 +75,8 @@ extern int32_t TelevisHndlSendSema;
 
 // link to Carel.c
 extern int32_t CarelHndlSendSema;
+extern bool writeACK;
+extern bool dataReadyFlag;
 
 // link to main.c 
 extern uint32_t ProtocolMsgSize;
@@ -138,7 +146,7 @@ void ModbusPortReception(void)
 			ModbusMsgSize = U3_RxMessageSize;
 			for(uint8_t i = 0; i < U3_RxMessageSize; i++){
 				ModbusBuf[i] = U3_RXBuffer[i];
-//				U3_RXBuffer[i] = 0;
+				U3_RXBuffer[i] = 0;
 			}
 			/* Turn off green led, indication that data from monitor unit received */	
 			LEDs_off();
@@ -166,6 +174,10 @@ void ModbusPortTxInit(void){
 	while(1){
 		OS_Wait(&ModbusPortTxInitSema);
 		U3_pBufferTransmit = &U3_TXBuffer[0];
+		pinDirState = HAL_GPIO_ReadPin(GPIO_Dir, PIN_Dir);
+		if(pinDirState != GPIO_PIN_SET){
+			HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_SET);
+		}
 		DisableInterrupts();
 #ifdef APDEBUG		
 		DebugModbusBuf[13] = U3_TxMessageSize;
@@ -175,10 +187,6 @@ void ModbusPortTxInit(void){
 //			ModbusBuf[i] = 0;
 		}
 		EnableInterrupts();
-		pinDirState = HAL_GPIO_ReadPin(GPIO_Dir, PIN_Dir);
-		if(pinDirState != GPIO_PIN_SET){
-			HAL_GPIO_WritePin(GPIO_Dir, PIN_Dir, GPIO_PIN_SET);
-		}
 		OS_Signal(&U3_TxSemaphore);
 #ifdef APDEBUG
 		Count9++;
@@ -255,11 +263,11 @@ void ModbusHndlReceive(void)//Request Called by App
 	while(1){
 		OS_Wait(&ModbusHndlReceiveSema);
 		ev->ev_reg = 0;
-		msg_len = ProtocolMsgSize;
+		msg_len = ModbusMsgSize;
 		data_len = msg_len - 2;
-		ProtocolMsgSize = 0;
-		crc = ModbusCrc16(ProtocolBuf, data_len); //calculate crc
-		crcptr = &ProtocolBuf[data_len]; //pointer to crc in the message
+		ModbusMsgSize = 0;
+		crc = ModbusCrc16(ModbusBuf, data_len); //calculate crc
+		crcptr = &ModbusBuf[data_len]; //pointer to crc in the message
 		// Listen for messages addressed only for connected controller or broadcast and valid CRC
 		if( ((mb->addr == ev->ev_addr) || (mb->addr == BROADCAST)) && ((crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1)) ){ 
 			DisableInterrupts();		
@@ -382,56 +390,99 @@ void ModbusCarelHndlRcvd(void)
 	while(1){
 		OS_Wait(&ModbusHndlReceiveSema);
 		ev->ev_reg = 0;
-		msg_len = ProtocolMsgSize;
+		msg_len = ModbusMsgSize;
 		data_len = msg_len - 2;
-		ProtocolMsgSize = 0;
+		ModbusMsgSize = 0;
+		msg_cmd = ModbusBuf[modbus_function];		
 		crc = ModbusCrc16(&ModbusBuf[0], data_len); //calculate crc
 		crcptr = &ModbusBuf[data_len]; //pointer to crc in the message
 		// Listen for messages addressed only for connected controller or broadcast and valid CRC
-//		if( ((ProtocolBuf[modbus_address] == ev->ev_addr) || (ProtocolBuf[modbus_address] == BROADCAST)) && ((crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1)) ){ 
-			DisableInterrupts();		
-			msg_cmd = ModbusBuf[modbus_function];
-//			if( msg_cmd == RCOIL ) //Read coils
-//			{		
+		if( ((ModbusBuf[modbus_address] == ev->ev_addr) || (ModbusBuf[modbus_address] == BROADCAST)) && ((crc&0xFF) == *crcptr && (crc>>8) == *(crcptr+1)) ){ 
+			DisableInterrupts();
+			if( dataReadyFlag ){
+				ev->ev_cmd = msg_cmd;
+				ev->ev_reg = ( ModbusBuf[modbus_regHi] << 8 ) | ModbusBuf[modbus_regLo]; // save start register index
+				if( (msg_cmd != DEBUG) && (msg_cmd != RCOIL) && (msg_cmd != W1COIL) ){
+					if( ev->ev_reg > 0 && ev->ev_reg < 128 ){
+						ev->ev_vartype = ANA_VAR;
+					} else if( ev->ev_reg > 127 && ev->ev_reg < 255 ){
+						ev->ev_vartype = INT_VAR;
+					} else if(ev->ev_reg > 10000 && ev->ev_reg < 10039){
+						ev->ev_vartype = DIG_VAR;
+					} else if(ev->ev_reg == HWidREG){
+						ev->ev_vartype = HW_VAR;
+					} else { // Prepare exception
+						ModbusBuf[0] = ev->ev_addr;
+						ModbusBuf[1] = 0x80 + msg_cmd;
+						ModbusBuf[2] = 0x02; // ILLEGAL DATA ADDRESS
+						msg_len = 3;
+						crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
+						ModbusBuf[msg_len++] = crc; //Add CRC to buf
+						ModbusBuf[msg_len++] = crc >> 8;
+						ev->ev_reg = NULL;
+					}
+				} else if(msg_cmd == RCOIL || msg_cmd == W1COIL ) { // this comparision block for compatibility with old software, server sends reques directly to coil variable, no offset
+					ev->ev_vartype = DIG_VAR;
+				}
+				if( msg_cmd == RCOIL ){ //Read coils
+					// save quantity registers to read	
+					ev->ev_len = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo];
+					if( ev->ev_len < 0x0001 || ev->ev_len > 0x07D0 ){
+						ModbusBuf[0] = ev->ev_addr;
+						ModbusBuf[1] = 0x80 + msg_cmd;
+						ModbusBuf[3] = 0x03; // ILLEGAL DATA VALUE
+						msg_len = 3;
+						crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
+						ModbusBuf[msg_len++] = crc; //Add CRC to buf
+						ModbusBuf[msg_len++] = crc >> 8;						
+						ev->ev_cmd = NULL;
+					}
+				
+				} else if( msg_cmd == W1COIL ){ //one coil write command
+					// save register value
+					ev->ev_regvalue = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo];
+				}
+				else if( msg_cmd == CMD03 ){ //multy reg read command
+					// save quantity registers to read
+					ev->ev_len = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo]; 
+				
+				} else if( msg_cmd == CMD06 ){ // one register write command		
+					// save register value
+					ev->ev_regvalue = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo];
 
-//			}		
-//			else if( (msg_cmd == CMD03) || (msg_cmd == CMD73) ) //multy reg read command
-//			{
-//				
-//			}
-//			else if( msg_cmd == CMD06 || msg_cmd == CMD76 )//one reg write command
-//			{		
+				} else if( msg_cmd == DEBUG ){
+				
 
-//			}
-//			else if( msg_cmd == CMD43 )
-//			{		
-
-//			}
-//			//-------------------------------
-//			else if( msg_cmd == DEBUG )
-//			{
-
-//			}
-//			else if( msg_cmd == 0x05 )
-//			{
-//					Count10++;
-//			}
-//		//-------------------------------
-//			else
-//			{
-//			
-//			}
-	
-			ev->ev_cmd = msg_cmd;
-			ev->ev_reg |= ModbusBuf[modbus_regHi];
-			ev->ev_reg = ev->ev_reg << 8;
-			ev->ev_reg |= ModbusBuf[modbus_regLo];
-			ev->ev_len = msg_len;
+				} else { // Prepare exception
+					ModbusBuf[0] = ev->ev_addr;
+					ModbusBuf[1] = 0x80 + msg_cmd;
+					ModbusBuf[2] = 0x01; // ILLEGAL FUNCTION
+					msg_len = 3;
+					crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
+					ModbusBuf[msg_len++] = crc; //Add CRC to buf
+					ModbusBuf[msg_len++] = crc >> 8;						
+					ev->ev_cmd = NULL;
+				}
+			} else { // Exception when device not equired
+				ModbusBuf[0] = ev->ev_addr;
+				ModbusBuf[1] = 0x80 + msg_cmd;
+				ModbusBuf[2] = 0x06; // SERVER DEVICE BUSY
+				msg_len = 3;
+				crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
+				ModbusBuf[msg_len++] = crc; //Add CRC to buf
+				ModbusBuf[msg_len++] = crc >> 8;				
+				ev->ev_cmd = NULL;
+			}
 			EnableInterrupts();
-//			OS_Signal(&CarelHndlSendSema);
-//		} else {
-//			OS_Signal(&U3_RxInitSema); // signal ModbusPortRxInit() to listen new message
-//		}
+			if( (!ev->ev_reg) || (!ev->ev_cmd) ){
+				U3_TxMessageSize = msg_len;
+				OS_Signal(&ModbusPortTxInitSema);
+			} else {
+				OS_Signal(&CarelHndlSendSema);
+			}
+		} else {
+			OS_Signal(&U3_RxInitSema); // signal ModbusPortRxInit() to listen new message
+		}
 #ifdef APDEBUG		
 		Count10++;
 #endif		
@@ -537,6 +588,7 @@ void ModbusSend(void)//Reply Called by App
 void ModbusSendCarel(void)
 {
   uint32_t crc;
+	uint16_t i, j;
   uint8_t msg_cmd, data_len, msg_len;
 #ifdef APDEBUG	
 	Count11 = 0;
@@ -544,48 +596,64 @@ void ModbusSendCarel(void)
 	
 	while(1){
 		OS_Wait(&ModbusSendSema);
-//		ProtocolBuf[modbus_address] = ev->ev_addr; Disabled 31.01.2018 for development purpose
+		ModbusBuf[modbus_address] = ev->ev_addr;
+		ModbusBuf[modbus_function] = ev->ev_cmd;
 		msg_cmd = ev->ev_cmd;
-//		ProtocolBuf[modbus_function] = msg_cmd; Disabled 31.01.2018 for development purpose
-#ifdef APDEBUG
-		DebugModbusBuf[12] = ev->ev_addr;
-		DebugModbusBuf[13] = ev->ev_cmd;
-#endif
-		//--------------------------------
-		//44   03   02  00 C2   F4 1A
-		//Addr Cmd Len  Data    Crc
-		if( (msg_cmd == CMD03) || (msg_cmd == CMD73) )
-		{
-	
+		
+		if( msg_cmd == RCOIL ){
+			ModbusBuf[modbus_bytecount] = ev->ev_len;
+			data_len = modbus_startdata + ModbusBuf[modbus_bytecount];
+			for(i = modbus_startdata, j = 0; i < data_len; i += 2, j++){
+				ModbusBuf[i] = ev->dataptr[j];
+			}
+			free(ev->dataptr); // free memory allocated in corresponding section CarelSend function, Carel.c file
+			msg_len = data_len;			
+		} else if( msg_cmd == CMD03 ){
+			ModbusBuf[modbus_bytecount] = ev->ev_len * 2;
+			data_len = modbus_startdata + ModbusBuf[modbus_bytecount];
+			for(i = modbus_startdata, j = 0; i < data_len; i++, j++){
+				ModbusBuf[i] = ev->dataptr[j];
+			}
+			free(ev->dataptr); // free memory allocated in corresponding section CarelSend function, Carel.c file
+			msg_len = data_len;
 		}
-		//--------------------------------
-		//44   06   C0 A8  12 34  B2 BC
-		//Addr Cmd  Reg    Data   Crc
-		else if( (msg_cmd == CMD06) || (msg_cmd == CMD76) )//Should return the same reply as request
+		else if( msg_cmd == CMD06 || msg_cmd == W1COIL )//Should return the same reply as request
 		{
-
+			if(writeACK){
+				msg_len = 6;
+				writeACK = false; // Set false for next device write operation
+			} else {
+				if( msg_cmd == CMD06 ){
+					ModbusBuf[0] = 0x86; // Exception
+					ModbusBuf[1] = 0x04; // SLAVE DEVICE FAILURE
+					msg_len = 2;
+				} else if( msg_cmd == W1COIL ){
+					ModbusBuf[0] = 0x85; // Exception
+					ModbusBuf[1] = 0x04; // SLAVE DEVICE FAILURE
+					msg_len = 2;
+				} else {
+					ModbusBuf[0] = '?';
+					ModbusBuf[1] = '?';
+					ModbusBuf[2] = '?';
+					msg_len = 3;
+				}
+			}
 		}
-		//--------------------------------
-		//44   10   C0 A8  00 01  B2 BC
-		//Addr Cmd  Reg    Num    Crc
-		else if( msg_cmd == CMD10 ) 
-		{
-
-		}
-		//--------------------------------
-		else if( msg_cmd == 0x05 )
-		{
-			msg_len = ModbusMsgSize;
-			ModbusMsgSize = 0;
-		}
-		//--------------------------------
-		else {
-			msg_len = ModbusMsgSize;
-			ModbusMsgSize = 0;
+		else { // Exception
+				ModbusBuf[0] = 0x80 + msg_cmd;
+				ModbusBuf[1] = 0x01; // ILLEGAL FUNCTION
+				msg_len = 2;
 		}
 		crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
-//		ModbusBuf[msg_len++] = crc; //Add CRC to buf  Disabled 1.02.2018 for development purpose
-//		ModbusBuf[msg_len++] = crc >> 8;							Disabled 1.02.2018 for development purpose
+		ModbusBuf[msg_len++] = crc; //Add CRC to buf 
+		ModbusBuf[msg_len++] = crc >> 8;
+#ifdef APDEBUG
+		if( msg_cmd == W1COIL ){
+			for(uint16_t i = 0; i < msg_len; i++){
+				DebugModbusBuf[i] = ModbusBuf[i];
+			}
+		}
+#endif
 		U3_TxMessageSize = msg_len;
 		OS_Signal(&ModbusPortTxInitSema);
 #ifdef APDEBUG		

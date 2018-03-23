@@ -59,3 +59,6 @@ uniadapter\main.o: ../Inc/Televis.h
 uniadapter\main.o: ../Inc/Command.h
 uniadapter\main.o: ../Inc/Modbus.h
 uniadapter\main.o: ../Inc/Carel.h
+uniadapter\main.o: ../Inc/iwdg.h
+uniadapter\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_iwdg.h
+uniadapter\main.o: ../Inc/LED.h

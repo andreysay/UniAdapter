@@ -32,16 +32,25 @@
 #define ETX		0x03 // end of text
 #define ENQ		0x05 // enquiry
 #define ACK		0x06 // acknowlege
-#define DIG_VAR		'D'
-#define ANA_VAR		'A'
-#define INT_VAR		'I'
-#define RDIG_VAR	'B'
-#define RANA_VAR	'S'
-#define RINT_VAR	'U'
-#define FREQ			'F'
-#define RX_VAR		'x'
-#define RV_VAR		'V'
-#define DREQ		0x3F
+#define DIG_VAR		'D' //0x44
+#define ANA_VAR		'A' //0x41
+#define INT_VAR		'I' //0x49
+#define RDIG_VAR	'B' //0x42
+#define RANA_VAR	'S' //0x53
+#define RINT_VAR	'U' //0x55
+#define FREQ			'F' //0x46
+#define RX_VAR		'x' //0x78
+#define RV_VAR		'V' //0x56
+#define RR_VAR		'R' //0x52
+#define RT_VAR		'T' //0x54
+#define HW_VAR		'=' //0x3D
+#define DREQ			'?' //0x3F
+#define TREQ			'T' //0x54
+#define RREQ			'R' //0x52
+#define	WREQ			'W' //0x57
+
+
+#define HWidREG 0xFFF2
 
 #define FARLOOP1 1
 #define FARLOOP2 2

@@ -1,10 +1,5 @@
 uniadapter\gpio.o: ../Src/gpio.c
-uniadapter\gpio.o: ../Inc/gpio.h
-uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
-uniadapter\gpio.o: ../Inc/stm32f1xx_hal_conf.h
-uniadapter\gpio.o: ../Inc/main.h
-uniadapter\gpio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
-uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
+uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_gpio.h
 uniadapter\gpio.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\gpio.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 uniadapter\gpio.o: ../Drivers/CMSIS/Include/core_cm3.h
@@ -14,6 +9,11 @@ uniadapter\gpio.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 uniadapter\gpio.o: ../Drivers/CMSIS/Include/core_cmFunc.h
 uniadapter\gpio.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+uniadapter\gpio.o: ../Inc/stm32f1xx_hal_conf.h
+uniadapter\gpio.o: ../Inc/main.h
+uniadapter\gpio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_tim.h
+uniadapter\gpio.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
 uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
 uniadapter\gpio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
@@ -31,3 +31,6 @@ uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h
+uniadapter\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_system.h
+uniadapter\gpio.o: ../Inc/gpio.h

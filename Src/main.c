@@ -25,6 +25,7 @@
 #include "Televis.h"
 #include "Modbus.h"
 #include "Carel.h"
+#include "iwdg.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -70,8 +71,10 @@ extern bool DeviceFound;
 // link to Carel.c file
 extern int32_t CarelHndlReceiveSema;
 extern int32_t CarelHndlSendSema;
+extern int32_t CarelReadSema;
 extern int32_t ReadCarelENQSema;
 extern int32_t ReadCarelACKSema;
+extern int32_t CarelScanHndlSema;
 
 // Variable to store connected controller Type
 // which will detect by voltage on CFG pin 0 - 400mVolt = Dixel, 3000 - 3300mVolt = Eliwell
@@ -133,6 +136,8 @@ int main(void)
 	// Disable ADC conversion
 	Disable_ADC();
 	
+	TIM2TimeInit();
+	
 	OS_Init();            // initialize, disable interrupts
 	/* USER CODE BEGIN 2 */
 	switch(ControllerType){
@@ -154,6 +159,7 @@ int main(void)
 			OS_InitSemaphore(&U1_RxSemaphore, 0);
 			OS_InitSemaphore(&PortCtrlTxInitSema, 0);
 			OS_InitSemaphore(&U1_TxSemaphore, 0);
+			OS_InitSemaphore(&CarelReadSema, 0);
 			/* SEMAPHORE INITIALIZATION CODE END */
 		
 			/* THREADs INITIALIZATION CODE BEGIN */
@@ -174,7 +180,6 @@ int main(void)
 			break;
 		case Eliwell:
 			CtrlPortReg_Init();
-			TIM2TimeInit();
 			/* TRIGGER INITIALIZATION CODE BEGIN */
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
 			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
@@ -223,7 +228,6 @@ int main(void)
 			break;
 		case CarelEasy:
 			CtrlPortReg_Init();
-			TIM2TimeInit();
 			USART1_CarelEasyInit();
 			/* TRIGGER INITIALIZATION CODE BEGIN */
 			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
@@ -233,16 +237,17 @@ int main(void)
 			/* SEMAPHORE INITIALIZATION CODE BEGIN */
 			// Initialize CtrlScanSema to 1 to start run with that thread
 			OS_InitSemaphore(&CtrlScanSema, 1);
-			OS_InitSemaphore(&TelevisPortTxInitSema, 0);
+			OS_InitSemaphore(&PortCtrlTxInitSema, 0);
 			OS_InitSemaphore(&U1_TxSemaphore, 0);
 			OS_InitSemaphore(&PortCtrlRxInitSema, 0);
 			OS_InitSemaphore(&U1_RxSemaphore, 0);
 			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
-			OS_InitSemaphore(&U3_RxInitSema, 0);
+			OS_InitSemaphore(&U3_RxInitSema, 1);
 			OS_InitSemaphore(&U3_RxSemaphore, 0);
 			OS_InitSemaphore(&U3_TxSemaphore, 0);					
 			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
 			OS_InitSemaphore(&CarelHndlSendSema, 0);
+			OS_InitSemaphore(&CarelScanHndlSema, 0);
 			OS_InitSemaphore(&ReadCarelENQSema, 0);
 			OS_InitSemaphore(&ReadCarelACKSema, 0);
 			OS_InitSemaphore(&ModbusSendSema, 0);
@@ -253,16 +258,18 @@ int main(void)
 			/* THREADs INITIALIZATION CODE BEGIN */
 			OS_AddThread(&CarelScan, 2);
 		
-			OS_AddThread(&CarelPortTxInit, 2);
+			OS_AddThread(&CarelEasyPortTxInit, 2);
 			OS_AddThread(&CarelPortSendMsg, 3);
 			OS_AddThread(&CarelSend, 3);
 			
 			OS_AddThread(&CarelPortRxInit, 2);			
 			OS_AddThread(&CarelPortReception, 3);
 			
+			OS_AddThread(&CarelScanHndl, 3);
 			OS_AddThread(&CarelHndlReceived, 3);
 			OS_AddThread(&CarelSend, 3);
-			OS_AddThread(&readCarelCtrlENQ, 4);
+			OS_AddThread(&trigCarelEasy, 3);
+			OS_AddThread(&readCarelEasy, 4);
 			OS_AddThread(&readCarelCtrlACK, 4);
 
 			
@@ -274,10 +281,72 @@ int main(void)
 			OS_AddThread(&ModbusPortTxInit, 2);
 			OS_AddThread(ModbusPortSendMsg, 3);
 
+			OS_AddThread(&EventThread100ms, 4);
 			OS_AddThread(&EventThread1sec, 4);
-			OS_AddThread(&IdleTask,7);     // lowest priority, dummy task
+			OS_AddThread(&IdleTask, 7);     // lowest priority, dummy task
 			OS_Launch(); // doesn't return, interrupts enabled in here		
 			/* THREADs INITIALIZATION CODE END */
+			break;
+		case CarelMPX:
+			RS485_Init();
+			USART1_CarelEasyInit();
+			/* TRIGGER INITIALIZATION CODE BEGIN */
+			OS_PeriodTrigger0_Init(&Time100msSemaphore, 100);
+			OS_PeriodTrigger1_Init(&Time1secSemaphore, 1000);
+			/* TRIGGER INITIALIZATION CODE END */
+		
+			/* SEMAPHORE INITIALIZATION CODE BEGIN */
+			// Initialize CtrlScanSema to 1 to start run with that thread
+			OS_InitSemaphore(&CtrlScanSema, 1);
+			OS_InitSemaphore(&PortCtrlTxInitSema, 0);
+			OS_InitSemaphore(&U1_TxSemaphore, 0);
+			OS_InitSemaphore(&PortCtrlRxInitSema, 0);
+			OS_InitSemaphore(&U1_RxSemaphore, 0);
+			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
+			OS_InitSemaphore(&U3_RxInitSema, 1);
+			OS_InitSemaphore(&U3_RxSemaphore, 0);
+			OS_InitSemaphore(&U3_TxSemaphore, 0);					
+			OS_InitSemaphore(&CarelHndlReceiveSema, 0);
+			OS_InitSemaphore(&CarelHndlSendSema, 0);
+			OS_InitSemaphore(&CarelScanHndlSema, 0);
+			OS_InitSemaphore(&ReadCarelENQSema, 0);
+			OS_InitSemaphore(&ReadCarelACKSema, 0);
+			OS_InitSemaphore(&ModbusSendSema, 0);
+			OS_InitSemaphore(&ModbusPortTxInitSema, 0);
+			OS_InitSemaphore(&ModbusHndlReceiveSema, 0);
+			/* SEMAPHORE INITIALIZATION CODE END */
+		
+			/* THREADs INITIALIZATION CODE BEGIN */
+			OS_AddThread(&CarelScan, 2);
+		
+			OS_AddThread(&CarelMPXPortTxInit, 2);
+			OS_AddThread(&CarelPortSendMsg, 3);
+			OS_AddThread(&CarelSend, 3);
+			
+			OS_AddThread(&CarelPortRxInit, 2);			
+			OS_AddThread(&CarelPortReception, 3);
+			
+			OS_AddThread(&CarelScanHndl, 3);
+			OS_AddThread(&CarelHndlReceived, 3);
+			OS_AddThread(&CarelMPXSend, 3);
+			OS_AddThread(&trigCarelMPX, 3);
+			OS_AddThread(&readCarelMPX, 4);
+			OS_AddThread(&handleResponceCarelMPX, 4);
+
+			
+			OS_AddThread(&ModbusPortRxInit, 2);
+			OS_AddThread(&ModbusPortReception, 3);
+			OS_AddThread(&ModbusCarelHndlRcvd, 3);
+			
+			OS_AddThread(&ModbusSendCarel, 3);
+			OS_AddThread(&ModbusPortTxInit, 2);
+			OS_AddThread(ModbusPortSendMsg, 3);
+
+			OS_AddThread(&EventThread100ms, 4);
+			OS_AddThread(&EventThread1sec, 4);
+			OS_AddThread(&IdleTask, 7);     // lowest priority, dummy task
+			OS_Launch(); // doesn't return, interrupts enabled in here		
+			/* THREADs INITIALIZATION CODE END */			
 			break;
 		default:
 			EnableInterrupts();

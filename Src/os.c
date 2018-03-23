@@ -13,7 +13,7 @@
 #define INTCTRL         (*((volatile uint32_t *)0xE000ED04))
 
 /* Private define ------------------------------------------------------------*/
-#define NUMTHREADS  20       // maximum number of threads
+#define NUMTHREADS  30       // maximum number of threads
 #define NUMPERIODIC 2        // maximum number of periodic threads
 #define STACKSIZE   100      // number of 32-bit words in stack per thread
 

@@ -36,3 +36,13 @@ uniadapter\main_threads.o: ../Inc/StartUp.h
 uniadapter\main_threads.o: ../Inc/os.h
 uniadapter\main_threads.o: ../Inc/ControllerPort.h
 uniadapter\main_threads.o: ../Inc/LED.h
+uniadapter\main_threads.o: ../Inc/iwdg.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_rcc.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_system.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_utils.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_gpio.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_exti.h
+uniadapter\main_threads.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_iwdg.h
+uniadapter\main_threads.o: ../Inc/tim.h
+uniadapter\main_threads.o: ../Inc/stm32_assert.h

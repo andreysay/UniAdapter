@@ -14,6 +14,7 @@
 #include "os.h"
 #include "ControllerPort.h"
 #include "LED.h"
+#include "iwdg.h"
 
 #ifdef APDEBUG
 // Counters for debugging
@@ -23,7 +24,8 @@ uint32_t Count0, Count1, Count2, Count3, Count4, Count5, Count6, Count7, Count8;
 // link to ControllerType.c
 extern bool DeviceFound;
 // link to Carel.c
-extern int32_t CarelHndlSendSema;
+extern int32_t CarelReadSema;
+extern int32_t CtrlScanSema;
 
 // Semaphore for periodic thread which runs every 100ms
 int32_t Time100msSemaphore;
@@ -98,6 +100,7 @@ void EventThread100ms(void){
 #endif	
 	while(1){
 		OS_Wait(&Time100msSemaphore);           // 1000 Hz real time task
+
 #ifdef APDEBUG		
 		Count3++;
 #endif		
@@ -108,21 +111,20 @@ void EventThread100ms(void){
 // Inputs: none
 // Outputs: none
 // Event thread which active every 1 second 
+uint32_t Count60Sec = 0;
 void EventThread1sec(void){ 
 #ifdef APDEBUG	
   Count4 = 0;
 #endif	
-	uint32_t Count10Sec = 0;
-	
 	while(1){
 		OS_Wait(&Time1secSemaphore);
 		if(DeviceFound){
 			ToggleLedGreen();
-			if(Count10Sec > 60){
-				OS_Signal(&CarelHndlSendSema);
-				Count10Sec = 0;
+			if(Count60Sec > 59){
+				OS_Signal(&CarelReadSema);
+				Count60Sec = 0;
 			}
-			Count10Sec++;
+			Count60Sec++;
 		}
 #ifdef APDEBUG		
 		Count4++;

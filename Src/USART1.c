@@ -13,6 +13,7 @@
 #include "USART1.h"
 #include "ControllerPort.h"
 #include "ControllerType.h"
+#include "Command.h"
 	
 extern int32_t U1_RxSemaphore; // defined in main_threads.c file
 extern __IO uint32_t U1_idxTx; // defined in main_threads.c file
@@ -105,7 +106,7 @@ void USART1_Init(void){
 }
 
 // Initialize the UART1 for 19,200 baud rate (assuming 72 MHz clock),
-// 8 bit word length, no parity bits, one stop bit, single wire communication
+// 8 bit word length, no parity bits, one stop bit, two wires communication
 // Input: none
 // Output: none
 void USART1_CarelEasyInit(void){
@@ -144,15 +145,8 @@ void USART1_TransmitComplete_Callback(void)
 		U1_idxTx = 0;
     /* Disable TC interrupt */
     LL_USART_DisableIT_TC(USART1);
-#ifdef RS485
-		/* Set EnaRx and EnaTx pin in reception mode */
-		CtrlPortRegisters.EnaRx = GPIO_PIN_RESET;
-		CtrlPortRegisters.EnaTx = GPIO_PIN_RESET;		
-		HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, CtrlPortRegisters.EnaRx);
-		HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, CtrlPortRegisters.EnaTx);
-		LL_USART_EnableDirectionRx(USART1);
-#endif
-		if(ControllerType == CarelEasy){
+
+		if( ControllerType == CarelEasy ){
 			pin_RxA_State = HAL_GPIO_ReadPin(GPIO_RxA, PIN_RxA);
 			if(pin_RxA_State != GPIO_PIN_RESET){
 				HAL_GPIO_WritePin(GPIO_RxA, PIN_RxA, GPIO_PIN_RESET);
@@ -165,7 +159,17 @@ void USART1_TransmitComplete_Callback(void)
 			if(pin_TxA_State != GPIO_PIN_SET){
 				HAL_GPIO_WritePin(GPIO_TxA, PIN_TxA, GPIO_PIN_SET);
 			}	
+		} else if( ControllerType == CarelMPX ){
+			/* Set EnaRx and EnaTx pin in reception mode */
+			CtrlPortRegisters.EnaRx = GPIO_PIN_RESET;
+			CtrlPortRegisters.EnaTx = GPIO_PIN_RESET;		
+			HAL_GPIO_WritePin(GPIO_EnaRx, PIN_EnaRx, CtrlPortRegisters.EnaRx);
+			HAL_GPIO_WritePin(GPIO_EnaTx, PIN_EnaTx, CtrlPortRegisters.EnaTx);
+//			LL_USART_EnableDirectionRx(USART1);
+		} else {
+			/* Nothing to do! */
 		}
+		
     /* Turn ORANGE Off at end of transfer : Tx sequence completed successfully */
 		LEDs_off();
 		/* Initializes Buffer indication : */
@@ -234,7 +238,7 @@ void USART1_Reception_Callback(void)
   * @retval None
   */
 void USART1_IDLE_Callback(void){
-//	if(U1_idxRx >= 2){ // If recived 2 bytes or more, otherwise it uncomplete message   Disabled 30.01.18 for Carel testing
+	if( U1_idxRx && ControllerType != CarelMPX ){
 		/* Idle detected, Buffer full indication has been set */
 		U1_BufferReadyIndication = 1;
 		/* Save received data size */
@@ -243,7 +247,18 @@ void USART1_IDLE_Callback(void){
 		U1_idxRx = 0;
 		/* Signal thread that data received */
 		OS_Signal(&U1_RxSemaphore);
-//	}
+	} else if( U1_idxRx && ControllerType == CarelMPX ){
+		if(U1_idxRx >= 3 && U1_pBufferReception[U1_idxRx - 3] == ETX){
+			/* Idle detected, Buffer full indication has been set */
+			U1_BufferReadyIndication = 1;
+			/* Save received data size */
+			U1_RxMessageSize = U1_idxRx;
+			/* Initiliaze Buffer index to zero */
+			U1_idxRx = 0;
+			/* Signal thread that data received */
+			OS_Signal(&U1_RxSemaphore);			
+		}
+	}
 		/* Clear IDLE status */
 	LL_USART_ClearFlag_IDLE(USART1);	
 }
@@ -254,7 +269,7 @@ void USART1_IDLE_Callback(void){
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-	if(LL_USART_IsActiveFlag_RXNE(USART1) && LL_USART_IsEnabledIT_RXNE(USART1))   /* Check RXNE flag value in SR register */
+	if(LL_USART_IsEnabledIT_RXNE(USART1) && LL_USART_IsActiveFlag_RXNE(USART1))   /* Check RXNE flag value in SR register */
   {
     /* RXNE flag will be cleared by reading of DR register (done in call) */
     /* Call function in charge of handling Character reception */
@@ -275,13 +290,13 @@ void USART1_IRQHandler(void)
 				and prepare next charcater transmission */
 		USART1_TransmitComplete_Callback();
   }
-	if(LL_USART_IsActiveFlag_IDLE(USART1) && LL_USART_IsEnabledIT_IDLE(USART1))   /* Check IDLE flag value in SR register */
+	if(LL_USART_IsEnabledIT_IDLE(USART1) && LL_USART_IsActiveFlag_IDLE(USART1))   /* Check IDLE flag value in SR register */
   {
     /* IDLE flag will be cleared by a software sequence (an read to the
 				USART_SR register followed by a read to the USART_DR register (done in call) */
     /* Call function in charge of handling Idle interrupt */
 		USART1_IDLE_Callback();
-  }	
+  }
 	
   /* USER CODE END USART3_IRQn 0 */
 

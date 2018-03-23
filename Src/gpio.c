@@ -38,6 +38,10 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f1xx_ll_gpio.h"
+#include "stm32f1xx_ll_bus.h"
+#include "stm32f1xx_ll_tim.h"
+#include "stm32f1xx_ll_system.h"
 #include "gpio.h"
 /* USER CODE BEGIN 0 */
 
@@ -61,6 +65,8 @@
 */
 void MX_GPIO_Init(void)
 {
+	// This releases PA15, PB3 and PB4 which now become available as GPIOs.
+	LL_GPIO_AF_Remap_SWJ_NOJTAG();
 
   GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -68,7 +74,15 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+//  __HAL_RCC_GPIOB_CLK_ENABLE();
+	  /* Enable the peripheral clock of GPIOB */
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+  
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
+  LL_GPIO_AF_Remap_SWJ_NOJTAG();
+	LL_DBGMCU_SetTracePinAssignment(LL_DBGMCU_TRACE_NONE);
+//	LL_GPIO_AF_DisableRemap_SWJ();
+  while((AFIO->MAPR & AFIO_MAPR_SWJ_CFG_JTAGDISABLE) != AFIO_MAPR_SWJ_CFG_JTAGDISABLE);
 
 	  /*Configure GPIO pins : PBPin PBPin PBPin PBPin 
                            PBPin PBPin PBPin */

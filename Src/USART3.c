@@ -116,6 +116,7 @@ void USART3_TransmitComplete_Callback(void)
     /* Turn LEDs Off at end of transfer : Tx sequence completed successfully */
 		HAL_GPIO_WritePin(GPIOB, LED_GRN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_RESET);
+
 		OS_Signal(&U3_RxSemaphore); // Signal semaphore to start accept new request from MU Port
   }
 }

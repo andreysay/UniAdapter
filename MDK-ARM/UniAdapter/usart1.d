@@ -47,3 +47,4 @@ uniadapter\usart1.o: ../Inc/LED.h
 uniadapter\usart1.o: ../Inc/USART1.h
 uniadapter\usart1.o: ../Inc/ControllerPort.h
 uniadapter\usart1.o: ../Inc/ControllerType.h
+uniadapter\usart1.o: ../Inc/Command.h

@@ -21,6 +21,7 @@
 "uniadapter\controllertype.o"
 "uniadapter\led.o"
 "uniadapter\carel.o"
+"uniadapter\iwdg.o"
 "uniadapter\stm32f1xx_hal_cortex.o"
 "uniadapter\stm32f1xx_hal.o"
 "uniadapter\stm32f1xx_hal_rcc_ex.o"

@@ -34,12 +34,15 @@
 typedef struct TEvent
 {
   uint8_t ev_addr;
+	uint8_t ev_carel_addr;
   uint8_t ev_cmd;
-  uint32_t ev_reg;
   uint8_t *dataptr;
-  uint32_t ev_len;
+	uint8_t ev_size;
+	uint8_t ev_vartype;
   uint8_t ev_debug;
-  uint8_t ev_size;
+	uint32_t ev_len;
+	uint32_t ev_reg;
+	int32_t  ev_regvalue;
 } TEvent;
 /* USER CODE END Private defines */
 
