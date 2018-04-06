@@ -257,6 +257,15 @@ void USART1_IDLE_Callback(void){
 			U1_idxRx = 0;
 			/* Signal thread that data received */
 			OS_Signal(&U1_RxSemaphore);			
+		} else if( U1_idxRx == 1 && U1_pBufferReception[0] == ACK ){
+			/* Idle detected, Buffer full indication has been set */
+			U1_BufferReadyIndication = 1;
+			/* Save received data size */
+			U1_RxMessageSize = U1_idxRx;
+			/* Initiliaze Buffer index to zero */
+			U1_idxRx = 0;
+			/* Signal thread that data received */
+			OS_Signal(&U1_RxSemaphore);				
 		}
 	}
 		/* Clear IDLE status */
@@ -264,7 +273,7 @@ void USART1_IDLE_Callback(void){
 }
 
 /**
-* @brief This function handles USART3 global interrupt.
+* @brief This function handles USART1 global interrupt.
 */
 void USART1_IRQHandler(void)
 {

@@ -111,7 +111,8 @@ void EventThread100ms(void){
 // Inputs: none
 // Outputs: none
 // Event thread which active every 1 second 
-uint32_t Count60Sec = 0;
+uint16_t Count60Sec = 0;
+uint32_t T_sec = UINT32_MAX; // If T_sec will not set CarelReadSema will never signaled.
 void EventThread1sec(void){ 
 #ifdef APDEBUG	
   Count4 = 0;
@@ -120,7 +121,7 @@ void EventThread1sec(void){
 		OS_Wait(&Time1secSemaphore);
 		if(DeviceFound){
 			ToggleLedGreen();
-			if(Count60Sec > 59){
+			if(Count60Sec > T_sec){
 				OS_Signal(&CarelReadSema);
 				Count60Sec = 0;
 			}

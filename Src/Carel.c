@@ -90,7 +90,7 @@ static bool sendWrite_Flag = false;
 static 	uint32_t idxFront, idxBack;
 
 // Global flags
-bool writeACK = false;
+bool writeACK = true;
 bool dataReadyFlag = false;
 
 // Carel indexs symbols
@@ -115,6 +115,7 @@ bool dataReadyFlag = false;
 
 
 // Carel protocol symbols
+#define PJEASY_VAR_ARRAY_SIZE		510
 #define DIG_ARRAY_SIZE 		199
 #define INT_ARRAY_SIZE 		208
 #define ANA_ARRAY_SIZE 		208
@@ -123,7 +124,7 @@ bool dataReadyFlag = false;
 #define IR33IDX_INT_MAP_SIZE	134
 #define IDX_DIG_MAP_SIZE	39
 #define DEVICE_PARAM_SIZE 16
-#define DATA_MPX_MAP_SIZE 24
+#define DATA_MPX_MAP_SIZE 25
 
 // Carel hardware ID
 #define CAREL_PJEZ	173
@@ -136,15 +137,17 @@ int32_t INT_ARRAY[INT_ARRAY_SIZE];
 // Array to store ANA(analog variable) values from Carel controller Array indexies correspond analog variable index by formula variable_index = array_index + 1
 int32_t ANA_ARRAY[ANA_ARRAY_SIZE];
 
+//int32_t PJEASY_VAR_ARRAY[PJEASY_VAR_ARRAY_SIZE];
+
 int32_t CAREL_DEVICE_PARAM[DEVICE_PARAM_SIZE];
 
 // Carel - Modbus analog variables index relation
- const two_idx_struct carel_modbus_ANA_mapping[IDX_ANA_MAP_SIZE] = { 	{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5},
-																																				{6, 6}, {7, 7}, {8, 8}, {9, 9}, {10, 10}, {11, 11},
-																																				{12, 12}, {13, 13}, {14, 14}, {15, 15}, {16, 16}, {17, 17},
-																																				{18, 18}, {19, 19}, {20, 20}, {21, 21}, {22, 22}, {23, 23},
-																																				{24, 24}, {25, 25}, {26, 26}, {27, 27}, {28, 28}, {29, 29},
-																																				{30, 30}, {31, 31}, {32, 32}, {33, 33}, {34, 34}};
+// const two_idx_struct carel_modbus_ANA_mapping[IDX_ANA_MAP_SIZE] = { 	{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5},
+//																																				{6, 6}, {7, 7}, {8, 8}, {9, 9}, {10, 10}, {11, 11},
+//																																				{12, 12}, {13, 13}, {14, 14}, {15, 15}, {16, 16}, {17, 17},
+//																																				{18, 18}, {19, 19}, {20, 20}, {21, 21}, {22, 22}, {23, 23},
+//																																				{24, 24}, {25, 25}, {26, 26}, {27, 27}, {28, 28}, {29, 29},
+//																																				{30, 30}, {31, 31}, {32, 32}, {33, 33}, {34, 34}};
 // Carel - Modbus integer variables index relation 
 const two_idx_struct carel_modbus_INT_mapping[IDX_INT_MAP_SIZE] = { {0, 0}, {1, 129}, {2, 130}, {3, 131}, {4, 132}, {5, 133},
 																																			{6, 134}, {7, 135}, {8, 136}, {9, 137}, {10, 138}, {11, 139},
@@ -191,13 +194,13 @@ const two_idx_struct carelIR33_modbus_INT_mapping[IR33IDX_INT_MAP_SIZE] = { {0, 
 																																					{130, 230}, {131, 231}																																				
 																																};
 // Carel - Modbus digital variables index relation
-const two_idx_struct carel_modbus_DIG_mapping[IDX_DIG_MAP_SIZE] = { {0, 0}, {1, 10001}, {2, 10002}, {3, 10003}, {4, 10004}, {5, 10005}, {6, 10006},
-																																			{7, 10007}, {8, 10008}, {9, 10009}, {10, 10010}, {11, 10011}, {12, 10012},
-																																			{13, 10013}, {14, 10014}, {15, 10015}, {16, 10016}, {17, 10017}, {18, 10018},
-																																			{19, 10019}, {20, 10020}, {21, 10021}, {22, 10022}, {23, 10023}, {24, 10024},
-																																			{25, 10025}, {26, 10026}, {27, 10027}, {28, 10028}, {29, 10029}, {30, 10030},
-																																			{31, 10031}, {32, 10032}, {33, 10033}, {34, 10034}, {35, 10035}, {36, 10036},
-																																			{37, 10037}, {38, 10038} };
+//const two_idx_struct carel_modbus_DIG_mapping[IDX_DIG_MAP_SIZE] = { {0, 0}, {1, 10001}, {2, 10002}, {3, 10003}, {4, 10004}, {5, 10005}, {6, 10006},
+//																																			{7, 10007}, {8, 10008}, {9, 10009}, {10, 10010}, {11, 10011}, {12, 10012},
+//																																			{13, 10013}, {14, 10014}, {15, 10015}, {16, 10016}, {17, 10017}, {18, 10018},
+//																																			{19, 10019}, {20, 10020}, {21, 10021}, {22, 10022}, {23, 10023}, {24, 10024},
+//																																			{25, 10025}, {26, 10026}, {27, 10027}, {28, 10028}, {29, 10029}, {30, 10030},
+//																																			{31, 10031}, {32, 10032}, {33, 10033}, {34, 10034}, {35, 10035}, {36, 10036},
+//																																			{37, 10037}, {38, 10038} };
 // Structure which holds integer value and corresponding char value 
 typedef struct int_to_char {
 	uint8_t integer_value;
@@ -221,14 +224,17 @@ typedef struct char_int_idx {
 } var_type_struct;
 
 typedef struct data_MPX_map {
-	uint16_t enq_idx;
-	var_type_struct var_type_idx[4];
+	uint16_t enq_idx; // variables block index
+	var_type_struct var_type_idx[4]; // structures array which holds: variable type, index, relative position in data R/W requests 0, 4, 8, 12
 } data_MPX_map;
 
-const data_MPX_map data_MPX_mapping_array[DATA_MPX_MAP_SIZE] = {
-																									{ 0x45, { {'D', 1},  {'D', 2},  {'D', 3},  {'D', 4} } },
-																									{ 0x46, { {'D', 5},  {'D', 6},  {'D', 7},  {'D', 8} } },
+const data_MPX_map data_MPX_mapping_array[DATA_MPX_MAP_SIZE] = { // array contain enquire indexes and variables type and corresponding variable index
+//																									{ 0x45, { {'D', 1},  {'D', 2},  {'D', 3},  {'D', 4} } },
+																									{ 0x45, { {'D', 1},  {'?', 0},  {'?', 0},  {'?', 0} } },
+//																									{ 0x46, { {'D', 5},  {'D', 6},  {'D', 7},  {'D', 8} } },
+																									{ 0x46, { {'D', 21},  {'?', 0},  {'?', 0},  {'?', 0} } },
 																									{ 0x47, { {'A', 1},  {'A', 2},  {'A', 3},  {'A', 4} } },
+																									{ 0x4F, { {'D', 60}, {'?', 0},  {'?', 0},  {'?', 0} } },
 																									{ 0x50, { {'A', 7},  {'A', 8},  {'I', 9},  {'I', 10} } },
 																									{ 0x51, { {'I', 11}, {'I', 12}, {'I', 13}, {'I', 14} } },
 																									{ 0x52, { {'A', 15}, {'I', 16}, {'A', 17}, {'I', 18} } },
@@ -251,6 +257,10 @@ const data_MPX_map data_MPX_mapping_array[DATA_MPX_MAP_SIZE] = {
 																									{ 0x63, { {'I', 84}, {'I', 85}, {'I', 86}, {'I', 87} } },
 																									{ 0x64, { {'I', 88}, {'I', 89}, {'I', 90}, {'I', 91} } }
 };
+
+//const int8_t MPX_ANA_VAR_OFFSET[64] = { [0 ... 6] = -1, [7] = 0, [8] = 1, [9 ... 14] = -1, [15] = 0, [16] = -1,
+//																				 [17] = 2, [18] = -1, [19] = 0, [20 ... 22] = -1, [23] = 0, [24 ... 48] = -1,
+//																				 [49] = 2, [50 ... 60] = -1,  [61] = 2 };
 
 const three_idx_struct digital_variable_idx_bit_offset[65] = {	{0x00, 0, 0}, 
 																															{0x45, 8, 0}, {0x45, 9, 0}, {0x45, 10, 0}, {0x45, 11, 0},
@@ -456,6 +466,7 @@ void CarelPortRxInit(void)
 		LL_USART_EnableIT_RXNE(USART1);		
 		/* Enable Error interrupt */
 		LL_USART_EnableIT_ERROR(USART1);
+
 		OS_Signal(&U1_RxSemaphore);
 #ifdef APDEBUG		
 		Count7++;
@@ -559,61 +570,35 @@ void CarelSend(void)
 		ProtocolBuf[carel_header] = STX;
 		ProtocolBuf[carel_address] = ev->ev_carel_addr;
 		msg_cmd = ev->ev_cmd;
-
+		var_idx = ev->ev_reg; // server sends reques directly to a variable
+		
 		if( msg_cmd == RCOIL ){
 			ev->dataptr = (uint8_t *)malloc( sizeof(uint8_t) * ev->ev_len );
-//			for(uint16_t i = 1; i < IDX_DIG_MAP_SIZE; i++){ code was commented for compatibility with old code
-//				if( carel_modbus_DIG_mapping[i].modbus_idx == ev->ev_reg){
-//					var_idx = carel_modbus_DIG_mapping[i].carel_idx;
-//				}
-//			}
-			var_idx = ev->ev_reg; // server sends reques directly to coil variable, see line 418 Modbus.c file
 			for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j++){
-				ev->dataptr[j] = ( DIG_ARRAY[i] >> 8 );
-				ev->dataptr[j] = ( DIG_ARRAY[i] & 0xFF );
+				ev->dataptr[j] = DIG_ARRAY[i];
 			}			
 		} else if( msg_cmd == W1COIL ){ //one coil write command
 			ProtocolBuf[carel_vartype] = ev->ev_vartype;
-//				for(uint16_t i = 1; i < IDX_DIG_MAP_SIZE; i++){
-//					if( carel_modbus_DIG_mapping[i].modbus_idx == ev->ev_reg){
-//						var_idx = carel_modbus_DIG_mapping[i].carel_idx;
-//					}
-//				}
-			var_idx = ev->ev_reg; // server sends reques directly to coil variable, see line 418 Modbus.c file
 			ProtocolBuf[carel_varidx] = var_idx + 0x30;
-			ProtocolBuf[carel_val4] = ( ~( ev->ev_regvalue >> 8 ) );  // By Modbus specification coil regHi value should be FF or 00, so inversion of FF give as zero 
-			ProtocolBuf[carel_val4] = 0x30 + (( ProtocolBuf[carel_val4] == 0 ) ? 1 : 0 ); // in case of zero we will write 1 to coil
-			ProtocolBuf[carel_val3] = ( ~( ev->ev_regvalue & 0xFF ) ); // see above about logic this operation
-			ProtocolBuf[carel_val3] = 0x30 + (( ProtocolBuf[carel_val3] == 0 ) ? 1 : 0 );
-			ProtocolBuf[carel_val3 + 1] = ETX;
-			msg_len = 9;
+			ProtocolBuf[carel_varidx + 1] = ev->ev_regvalue + 0x30; 
+			ProtocolBuf[carel_varidx + 2] = ETX;
+			msg_len = 8;
 		}	else if( msg_cmd == CMD03 ){
 			// allocate memory for registers data, will free in CMD03 section ModbusSendCarel function, Modbus.c file
 			ev->dataptr = (uint8_t *)malloc(sizeof(uint8_t) * ev->ev_len * 2);
 			
 			if(ev->ev_vartype == ANA_VAR){
-				var_idx = carel_modbus_ANA_mapping[ev->ev_reg].carel_idx;
 				for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j += 2){
 					ev->dataptr[j] = ( ANA_ARRAY[i] >> 8 );
 					ev->dataptr[j+1] = ( ANA_ARRAY[i] & 0xFF );
 				}
 			} else if(ev->ev_vartype == INT_VAR){
 				if(CAREL_DEVICE_PARAM[0] == CAREL_PJEZ){
-					for(uint16_t i = 1; i < IDX_INT_MAP_SIZE; i++){
-						if( carel_modbus_INT_mapping[i].modbus_idx == ev->ev_reg){
-							var_idx = carel_modbus_INT_mapping[i].carel_idx;
-						}					
-					}
 					for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j += 2){
 						ev->dataptr[j] = ( INT_ARRAY[i] >> 8 );
 						ev->dataptr[j+1] = ( INT_ARRAY[i] & 0xFF );
 					}
 				} else if(CAREL_DEVICE_PARAM[0] == CAREL_IR33){
-					for(uint16_t i = 1; i < IR33IDX_INT_MAP_SIZE; i++){
-						if( carelIR33_modbus_INT_mapping[i].modbus_idx == ev->ev_reg){
-							var_idx = carel_modbus_INT_mapping[i].carel_idx;
-						}					
-					}
 					for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j += 2){
 						ev->dataptr[j] = ( INT_ARRAY[i] >> 8 );
 						ev->dataptr[j+1] = ( INT_ARRAY[i] & 0xFF );
@@ -621,26 +606,14 @@ void CarelSend(void)
 				} else {
 					/* Nothing to do! */
 				}					
-			} else if(ev->ev_vartype == HW_VAR){
+			} else if( ev->ev_vartype == HW_VAR ){
 					ev->dataptr[0] = ( CAREL_DEVICE_PARAM[carel_dev_hwid] >> 8);
 					ev->dataptr[1] = ( CAREL_DEVICE_PARAM[carel_dev_hwid] & 0xFF );
 			} else {
 				
 			}
 		} else if( msg_cmd == CMD06 ){
-			ProtocolBuf[carel_vartype] = ev->ev_vartype;
-			if(ev->ev_vartype == ANA_VAR){
-				var_idx = carel_modbus_ANA_mapping[ev->ev_reg].carel_idx;
-				
-			} else if(ev->ev_vartype == INT_VAR){
-				for(uint16_t i = 1; i < IDX_INT_MAP_SIZE; i++){
-					if( carel_modbus_INT_mapping[i].modbus_idx == ev->ev_reg){
-						var_idx = carel_modbus_INT_mapping[i].carel_idx;
-					}					
-				}			
-			} else {
-				
-			}			
+			ProtocolBuf[carel_vartype] = ev->ev_vartype;			
 			ProtocolBuf[carel_varidx] = var_idx + 0x30;
 			ProtocolBuf[carel_val4] = int_to_char_array[( (ev->ev_regvalue >> 12) & carel_wvalue_mask )].char_value;
 			ProtocolBuf[carel_val3] = int_to_char_array[( (ev->ev_regvalue >> 8)  & carel_wvalue_mask )].char_value;
@@ -670,7 +643,8 @@ void CarelSend(void)
 // Convert message from Modbus to Carel, send write command directly to Carel device, return preread values for read modbus requests.
 void CarelMPXSend(void)
 {
-  uint8_t msg_cmd, msg_len, var_idx;
+  uint8_t msg_cmd, msg_len, var_idx, reg_idx;
+	static uint8_t msg_cmd_stored;
 	uint16_t i, j, carel_wvalue_mask = 0x000F;
 
 	while(1){
@@ -679,58 +653,135 @@ void CarelMPXSend(void)
 		ProtocolBuf[carel_header] = STX;
 		ProtocolBuf[carel_address] = ev->ev_carel_addr;
 		msg_cmd = ev->ev_cmd;
+		var_idx = ev->ev_reg; // server sends reques directly to a variable
 
 		if( msg_cmd == RCOIL ){
 			ev->dataptr = (uint8_t *)malloc( sizeof(uint8_t) * ev->ev_len );
-			var_idx = ev->ev_reg; // server sends reques directly to coil variable, see line 418 Modbus.c file
-			for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j++){
-				ev->dataptr[j] = ( DIG_ARRAY[i] >> 8 );
-				ev->dataptr[j] = ( DIG_ARRAY[i] & 0xFF );
+ 			for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j++){
+				ev->dataptr[j] = DIG_ARRAY[i];
 			}			
-		} else if( msg_cmd == W1COIL || msg_cmd == CMD06 ){ //one coil write command
-			if(sendWrite_Flag){
-				msg_len = ProtocolMsgSize - 2;
-				ProtocolBuf[carel_vartype] = WREQ;
-				var_idx = ev->ev_reg; // server sends reques directly to coil variable, see line 418 Modbus.c file
-				ProtocolBuf[carel_varidx] = digital_variable_idx_bit_offset[var_idx].enq_idx;
-				ProtocolBuf[4 + (4 * digital_variable_idx_bit_offset[var_idx].byte_idx)] = int_to_char_array[( ( ev->ev_regvalue >> 12 ) & 0x0F )].char_value ;  
-				ProtocolBuf[5 + (4 * digital_variable_idx_bit_offset[var_idx].byte_idx)] = int_to_char_array[( ( ev->ev_regvalue >> 8 ) & 0x0F )].char_value ; 
-				ProtocolBuf[6 + (4 * digital_variable_idx_bit_offset[var_idx].byte_idx)] = int_to_char_array[( ( ev->ev_regvalue >> 4 ) & 0x0F )].char_value ;
-				ProtocolBuf[7 + (4 * digital_variable_idx_bit_offset[var_idx].byte_idx)] = int_to_char_array[( ev->ev_regvalue & 0x0F )].char_value ;
-				sendWrite_Flag = false;
-			} else {
-				sendWrite_Flag = true;
-				idxFront = digital_variable_idx_bit_offset[var_idx].enq_idx;
-				idxBack = digital_variable_idx_bit_offset[var_idx].enq_idx + 1;
-				if(idxFront == 0x47){
-					idxBack = 0x4A;
-				} else if(idxFront == 0x4A){
-					idxBack = 0x4F;
-				} else if(idxFront == 0x64){
-					idxBack = 0x64;
+		} else if(  msg_cmd == W1COIL  ){
+			msg_cmd_stored = ev->ev_cmd;
+			sendWrite_Flag = true;
+			sendENQ_Flag = false;
+			sendF_Flag = false;
+			sendACK_Flag = false;
+			sendDREQ_Flag = false;
+			idxFront = 0x4F;
+			idxBack = 0x50;
+			sendMPXRead();
+		}
+		else if( msg_cmd == CMD06 ){ //one reg write command
+			msg_cmd_stored = ev->ev_cmd;
+			sendWrite_Flag = true;
+			sendENQ_Flag = false;
+			sendF_Flag = false;
+			sendACK_Flag = false;
+			sendDREQ_Flag = false;
+			idxFront = 0;
+			reg_idx = i = j = 0; // index variables	
+			for(; i < DATA_MPX_MAP_SIZE; i++){
+				j = 0;
+				for(; j < 4; j++){
+					if(data_MPX_mapping_array[i].var_type_idx[j].idx == var_idx && data_MPX_mapping_array[i].var_type_idx[j].letter == ev->ev_vartype ){
+						idxFront = data_MPX_mapping_array[i].enq_idx;
+						idxBack = data_MPX_mapping_array[i].enq_idx + 1; 
+						break;
+					}
 				}
-				sendMPXRead();
+				if(idxFront){
+					break;
+				}
 			}
-		}	else if( msg_cmd == CMD03 ){
+			if(idxFront == 0x47){
+				idxBack = 0x4A;
+			} else if(idxFront == 0x4A){
+				idxBack = 0x4F;
+			} else if(idxFront == 0x64){
+				idxBack = 0x64;
+			}
+			else {
+				/* Nothing to do! */
+			}			
+			sendMPXRead();
+		} else if( msg_cmd == RREQ ){
+			sendWrite_Flag = false;
+			sendENQ_Flag = false;
+			sendF_Flag = false;
+			sendACK_Flag = false;
+			sendDREQ_Flag = false;			
+			if( msg_cmd_stored == CMD06 ){			
+				reg_idx = i = j = 0; // index variables	
+				for(; i < DATA_MPX_MAP_SIZE; i++){
+					j = 0;
+					for(; j < 4; j++){
+						if(data_MPX_mapping_array[i].var_type_idx[j].idx == var_idx && data_MPX_mapping_array[i].var_type_idx[j].letter == ev->ev_vartype ){
+							reg_idx = data_MPX_mapping_array[i].enq_idx;
+							break;
+						}
+					}
+					if(reg_idx){
+						break;
+					}
+				}
+				ev->ev_cmd = CMD06;
+				ProtocolBuf[carel_REQ] = WREQ;
+				ProtocolBuf[carel_regs] = reg_idx;
+				// j is a offset founded above for specific variable
+				ProtocolBuf[4 + 4 * j] = int_to_char_array[( ( ev->ev_regvalue >> 12 ) & 0x0F )].char_value ;  
+				ProtocolBuf[5 + 4 * j] = int_to_char_array[( ( ev->ev_regvalue >> 8 ) & 0x0F )].char_value ; 
+				ProtocolBuf[6 + 4 * j] = int_to_char_array[( ( ev->ev_regvalue >> 4 ) & 0x0F )].char_value ;
+				ProtocolBuf[7 + 4 * j] = int_to_char_array[( ev->ev_regvalue & 0x0F )].char_value ;
+			}
+			if( msg_cmd_stored == W1COIL ){
+				ev->ev_cmd = W1COIL;
+				ProtocolBuf[carel_REQ] = WREQ;
+				ProtocolBuf[carel_regs] = 0x4F;
+				switch(var_idx){
+					case 60:
+						j = 0;
+						ProtocolBuf[4 + 4 * j] = 0x30;  
+						ProtocolBuf[5 + 4 * j] = ( ev->ev_regvalue == 0 ) ? 0x30 : 0x31 ; 						
+						break;
+					case 61:
+						j = 0;
+						ProtocolBuf[6 + 4 * j] = 0x30 ;
+						ProtocolBuf[7 + 4 * j] = ( ev->ev_regvalue == 0 ) ? 0x30 : 0x31  ;					
+						break;
+					case 62:
+						j = 1;
+						ProtocolBuf[4 + 4 * j] = 0x30;  
+						ProtocolBuf[5 + 4 * j] = ( ev->ev_regvalue == 0 ) ? 0x30 : 0x31 ; 
+						break;
+					case 63:
+						j = 1;
+						ProtocolBuf[6 + 4 * j] = 0x30 ;
+						ProtocolBuf[7 + 4 * j] = ( ev->ev_regvalue == 0 ) ? 0x30 : 0x31  ;
+						break;
+					case 64:
+						j = 2;
+						ProtocolBuf[4 + 4 * j] = 0x30;  
+						ProtocolBuf[5 + 4 * j] = ( ev->ev_regvalue == 0 ) ? 0x30 : 0x31 ; 
+						break;
+					default:
+						break;
+				}
+			}
+			ProtocolBuf[20] = ETX;
+			msg_len = 23;
+		} else if( msg_cmd == CMD03 ){
 			// allocate memory for registers data, will free in CMD03 section ModbusSendCarel function, Modbus.c file
-			ev->dataptr = (uint8_t *)malloc(sizeof(uint8_t) * ev->ev_len * 2);
-			
+			ev->dataptr = (uint8_t *)malloc(sizeof(uint8_t) * ev->ev_len * 2);		
 			if(ev->ev_vartype == ANA_VAR){
-				var_idx = ev->ev_reg;
 				for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j += 2){
 					ev->dataptr[j] = ( ANA_ARRAY[i] >> 8 );
 					ev->dataptr[j+1] = ( ANA_ARRAY[i] & 0xFF );
 				}
 			} else if(ev->ev_vartype == INT_VAR){
-					for(uint16_t i = 1; i < IDX_INT_MAP_SIZE; i++){
-						if( carel_modbus_INT_mapping[i].modbus_idx == ev->ev_reg){
-							var_idx = carel_modbus_INT_mapping[i].carel_idx;
-						}					
-					}
-					for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j += 2){
-						ev->dataptr[j] = ( INT_ARRAY[i] >> 8 );
-						ev->dataptr[j+1] = ( INT_ARRAY[i] & 0xFF );
-					}					
+				for(i = var_idx, j = 0; i < (var_idx + ev->ev_len); i++, j += 2){
+					ev->dataptr[j] = ( INT_ARRAY[i] >> 8 );
+					ev->dataptr[j+1] = ( INT_ARRAY[i] & 0xFF );
+				}					
 			} else if(ev->ev_vartype == HW_VAR){
 					ev->dataptr[0] = ( CAREL_DEVICE_PARAM[carel_dev_hwid] >> 8);
 					ev->dataptr[1] = ( CAREL_DEVICE_PARAM[carel_dev_hwid] & 0xFF );
@@ -744,9 +795,10 @@ void CarelMPXSend(void)
 		EnableInterrupts();
 		if( msg_cmd == RCOIL || msg_cmd == CMD03 ){
 			OS_Signal(&ModbusSendSema);
-		} else if( (msg_cmd == W1COIL || msg_cmd == CMD06) && sendWrite_Flag){
+		} else if( ( msg_cmd ==  CMD06 || msg_cmd == W1COIL ) && sendWrite_Flag){
 			OS_Signal(&PortCtrlTxInitSema);
-		} else {
+		}
+		else {
 			CarelCRC(ProtocolBuf, msg_len);
 			U1_TxMessageSize = msg_len;
 			OS_Signal(&PortCtrlTxInitSema);
@@ -931,7 +983,7 @@ static uint8_t char_to_int10_15(uint8_t char_int){
     case 'D': return 13;
     case 'E': return 14;
     case 'F': return 15;
-    default: return 0;
+    default: return INT8_MAX;
 	}
 }
 
@@ -953,7 +1005,7 @@ static uint8_t char_to_int(uint8_t char_int){
     case 'D': return 13;
     case 'E': return 14;
     case 'F': return 15;
-    default : return 0;
+    default : return INT8_MAX;
   }
 }
 
@@ -1021,12 +1073,6 @@ void readCarelCtrlACK(void){
 						CAREL_DEVICE_PARAM[carel_dev_dat2] = (( ((ProtocolBuf[17] >> 4) == 3) ? (ProtocolBuf[17] - 0x30) : char_to_int10_15(ProtocolBuf[17]) ) << 4) | ( ((ProtocolBuf[18] >> 4) == 3) ? (ProtocolBuf[18] - 0x30) : char_to_int10_15(ProtocolBuf[18]) ); // Calculate Carel device HWid
 						CAREL_DEVICE_PARAM[carel_dev_fwid] = (( ((ProtocolBuf[20] >> 4) == 3) ? (ProtocolBuf[20] - 0x30) : char_to_int10_15(ProtocolBuf[20]) ) << 4) | ( ((ProtocolBuf[22] >> 4) == 3) ? (ProtocolBuf[22] - 0x30) : char_to_int10_15(ProtocolBuf[22]) ); // Calculate Carel device FWid
 						break;
-//					case RV_VAR:
-//						if( !DeviceFound ){
-//							DeviceFound = true;
-//							CAREL_DEVICE_PARAM[carel_dev_hwid] = ProtocolBuf[carel_regs] - 0x30;
-//						}
-//						break;
 					case RR_VAR:
 						
 						break;
@@ -1034,9 +1080,6 @@ void readCarelCtrlACK(void){
 						break;
 				}
 			}
-//			if( deviceScanFlag ){
-//				OS_Signal(&CtrlScanSema);
-//			} else 
 			if( sendDREQ_Flag ){
 				sendF_Flag = true;
 				sendDREQ_Flag = false;
@@ -1062,10 +1105,14 @@ void readCarelCtrlACK(void){
 				sendDREQ_Flag = false;
 				OS_Signal(&ReadCarelENQSema);
 			} else {
-//				OS_Signal(&CarelHndlSendSema);
+					/* Nothing to do! */
 			}
 		} else {
+			if( (ev->ev_cmd == CMD06 || ev->ev_cmd == W1COIL) && !writeACK ){
+				OS_Signal(&ModbusSendSema);
+			}
 			dataReadyFlag = true; // Receive from controller zero after scan cycle, set this flag to start process request from MU device
+//			array_idx = 0;
 		}
 		EnableInterrupts();
 	}
@@ -1116,22 +1163,22 @@ void handleResponceCarelMPX(void){
 							case 'D':
 								switch(varIndex){
 									case 0x45:
-										DIG_ARRAY[1] = ( ( dataValue[0] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[2] = ( ( dataValue[0] & (digital_variable_mask_1 << 9) ) ? 1 : 0 );
-										DIG_ARRAY[3] = ( ( dataValue[0] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
-										DIG_ARRAY[4] = ( ( dataValue[0] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
-										DIG_ARRAY[5] = ( ( dataValue[2] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[6] = ( ( dataValue[2] & (digital_variable_mask_1 << 9) ) ? 1 : 0 );
-										DIG_ARRAY[7] = ( ( dataValue[2] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
-										DIG_ARRAY[8] = ( ( dataValue[2] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
-										DIG_ARRAY[9] = ( ( dataValue[2] & (digital_variable_mask_1 << 12) ) ? 1 : 0 );
+										DIG_ARRAY[1] = 	( ( dataValue[0] & (digital_variable_mask_1 << 8)  ) ? 1 : 0 );
+										DIG_ARRAY[2] = 	( ( dataValue[0] & (digital_variable_mask_1 << 9)  ) ? 1 : 0 );
+										DIG_ARRAY[3] = 	( ( dataValue[0] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
+										DIG_ARRAY[4] = 	( ( dataValue[0] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
+										DIG_ARRAY[5] = 	( ( dataValue[2] & (digital_variable_mask_1 << 8)  ) ? 1 : 0 );
+										DIG_ARRAY[6] = 	( ( dataValue[2] & (digital_variable_mask_1 << 9)  ) ? 1 : 0 );
+										DIG_ARRAY[7] = 	( ( dataValue[2] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
+										DIG_ARRAY[8] = 	( ( dataValue[2] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
+										DIG_ARRAY[9] = 	( ( dataValue[2] & (digital_variable_mask_1 << 12) ) ? 1 : 0 );
 										DIG_ARRAY[10] = ( ( dataValue[2] & (digital_variable_mask_1 << 13) ) ? 1 : 0 );
 										DIG_ARRAY[11] = ( ( dataValue[2] & (digital_variable_mask_1 << 14) ) ? 1 : 0 );
 										DIG_ARRAY[12] = ( ( dataValue[2] & (digital_variable_mask_1 << 15) ) ? 1 : 0 );
 										break;
 									case 0x46:
-										DIG_ARRAY[21] = ( ( dataValue[0] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[22] = ( ( dataValue[0] & (digital_variable_mask_1 << 9) ) ? 1 : 0 );
+										DIG_ARRAY[21] = ( ( dataValue[0] & (digital_variable_mask_1 << 8)  ) ? 1 : 0 );
+										DIG_ARRAY[22] = ( ( dataValue[0] & (digital_variable_mask_1 << 9)  ) ? 1 : 0 );
 										DIG_ARRAY[23] = ( ( dataValue[0] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
 										DIG_ARRAY[24] = ( ( dataValue[0] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
 										DIG_ARRAY[25] = ( ( dataValue[0] & (digital_variable_mask_1 << 12) ) ? 1 : 0 );
@@ -1139,8 +1186,8 @@ void handleResponceCarelMPX(void){
 										DIG_ARRAY[27] = ( ( dataValue[0] & (digital_variable_mask_1 << 14) ) ? 1 : 0 );
 										DIG_ARRAY[28] = ( ( dataValue[0] & (digital_variable_mask_1 << 15) ) ? 1 : 0 );
 									
-										DIG_ARRAY[29] = ( ( dataValue[1] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[30] = ( ( dataValue[1] & (digital_variable_mask_1 << 9) ) ? 1 : 0 );
+										DIG_ARRAY[29] = ( ( dataValue[1] & (digital_variable_mask_1 << 8)  ) ? 1 : 0 );
+										DIG_ARRAY[30] = ( ( dataValue[1] & (digital_variable_mask_1 << 9)  ) ? 1 : 0 );
 										DIG_ARRAY[31] = ( ( dataValue[1] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
 										DIG_ARRAY[32] = ( ( dataValue[1] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
 										DIG_ARRAY[33] = ( ( dataValue[1] & (digital_variable_mask_1 << 12) ) ? 1 : 0 );
@@ -1148,26 +1195,26 @@ void handleResponceCarelMPX(void){
 										DIG_ARRAY[35] = ( ( dataValue[1] & (digital_variable_mask_1 << 14) ) ? 1 : 0 );
 										DIG_ARRAY[36] = ( ( dataValue[1] & (digital_variable_mask_1 << 15) ) ? 1 : 0 );	
 
-										DIG_ARRAY[37] = ( ( dataValue[2] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[38] = ( ( dataValue[2] & (digital_variable_mask_1 << 9) ) ? 1 : 0 );
+										DIG_ARRAY[37] = ( ( dataValue[2] & (digital_variable_mask_1 << 8)  ) ? 1 : 0 );
+										DIG_ARRAY[38] = ( ( dataValue[2] & (digital_variable_mask_1 << 9)  ) ? 1 : 0 );
 										DIG_ARRAY[39] = ( ( dataValue[2] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
 										DIG_ARRAY[40] = ( ( dataValue[2] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
 										DIG_ARRAY[41] = ( ( dataValue[2] & (digital_variable_mask_1 << 12) ) ? 1 : 0 );
 										DIG_ARRAY[42] = ( ( dataValue[2] & (digital_variable_mask_1 << 13) ) ? 1 : 0 );
 										DIG_ARRAY[43] = ( ( dataValue[2] & (digital_variable_mask_1 << 14) ) ? 1 : 0 );
 										
-										DIG_ARRAY[45] = ( ( dataValue[3] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[46] = ( ( dataValue[3] & (digital_variable_mask_1 << 9) ) ? 1 : 0 );
+										DIG_ARRAY[45] = ( ( dataValue[3] & (digital_variable_mask_1 << 8)  ) ? 1 : 0 );
+										DIG_ARRAY[46] = ( ( dataValue[3] & (digital_variable_mask_1 << 9)  ) ? 1 : 0 );
 										DIG_ARRAY[47] = ( ( dataValue[3] & (digital_variable_mask_1 << 10) ) ? 1 : 0 );
 										DIG_ARRAY[48] = ( ( dataValue[3] & (digital_variable_mask_1 << 11) ) ? 1 : 0 );
 										DIG_ARRAY[49] = ( ( dataValue[3] & (digital_variable_mask_1 << 12) ) ? 1 : 0 );
 										break;
 									case 0x4F:
-										DIG_ARRAY[60] = ( ( dataValue[3] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[61] = ( ( dataValue[3] & digital_variable_mask_1 ) ? 1 : 0 );
-										DIG_ARRAY[62] = ( ( dataValue[3] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
-										DIG_ARRAY[63] = ( ( dataValue[3] & digital_variable_mask_1 ) ? 1 : 0 );
-										DIG_ARRAY[64] = ( ( dataValue[3] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );										
+										DIG_ARRAY[60] = ( ( dataValue[0] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
+										DIG_ARRAY[61] = ( ( dataValue[0] & digital_variable_mask_1 ) ? 1 : 0 );
+										DIG_ARRAY[62] = ( ( dataValue[1] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );
+										DIG_ARRAY[63] = ( ( dataValue[1] & digital_variable_mask_1 ) ? 1 : 0 );
+										DIG_ARRAY[64] = ( ( dataValue[2] & (digital_variable_mask_1 << 8) ) ? 1 : 0 );										
 										break;
 									default:
 										break;

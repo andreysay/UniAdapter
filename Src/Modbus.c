@@ -25,7 +25,8 @@
 #define modbus_regLo			3
 #define modbus_valHi			4
 #define modbus_valLo			5
-#define modbus_bytecount	2
+#define modbus_coil_cnt		2
+#define modbus_bytecount  2
 #define modbus_startdata	3
 
 #ifdef APDEBUG
@@ -81,6 +82,7 @@ extern bool dataReadyFlag;
 // link to main.c 
 extern uint32_t ProtocolMsgSize;
 extern uint8_t ProtocolBuf[];
+extern uint32_t ControllerType;
 
 /* Private function prototypes -----------------------------------------------*/
 static uint32_t ModbusCrc16(const uint8_t *msg_data, uint8_t msg_len);
@@ -401,31 +403,21 @@ void ModbusCarelHndlRcvd(void)
 			DisableInterrupts();
 			if( dataReadyFlag ){
 				ev->ev_cmd = msg_cmd;
-				ev->ev_reg = ( ModbusBuf[modbus_regHi] << 8 ) | ModbusBuf[modbus_regLo]; // save start register index
-				if( (msg_cmd != DEBUG) && (msg_cmd != RCOIL) && (msg_cmd != W1COIL) ){
-					if( ev->ev_reg > 0 && ev->ev_reg < 128 ){
-						ev->ev_vartype = ANA_VAR;
-					} else if( ev->ev_reg > 127 && ev->ev_reg < 255 ){
-						ev->ev_vartype = INT_VAR;
-					} else if(ev->ev_reg > 10000 && ev->ev_reg < 10039){
-						ev->ev_vartype = DIG_VAR;
-					} else if(ev->ev_reg == HWidREG){
-						ev->ev_vartype = HW_VAR;
-					} else { // Prepare exception
-						ModbusBuf[0] = ev->ev_addr;
-						ModbusBuf[1] = 0x80 + msg_cmd;
-						ModbusBuf[2] = 0x02; // ILLEGAL DATA ADDRESS
-						msg_len = 3;
-						crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
-						ModbusBuf[msg_len++] = crc; //Add CRC to buf
-						ModbusBuf[msg_len++] = crc >> 8;
-						ev->ev_reg = NULL;
-					}
-				} else if(msg_cmd == RCOIL || msg_cmd == W1COIL ) { // this comparision block for compatibility with old software, server sends reques directly to coil variable, no offset
-					ev->ev_vartype = DIG_VAR;
+//				ev->ev_reg = ( ModbusBuf[modbus_regHi] << 8 ) | ModbusBuf[modbus_regLo]; // save start register index
+				ev->ev_vartype = ( ModbusBuf[modbus_regHi] == 0xFF ) ? HW_VAR : ModbusBuf[modbus_regHi]; // In Hi Modbus register we have TYPE of Carel variable
+				ev->ev_reg = ( ModbusBuf[modbus_regLo] == 0xF2 ) ? ( ModbusBuf[modbus_regHi] << 8 ) | ModbusBuf[modbus_regLo] : ModbusBuf[modbus_regLo]; // In Lo Modbus register we have Index of that variable
+				if( ControllerType == CarelEasy && ev->ev_reg != HWidREG && (ev->ev_reg < 1 || ev->ev_reg > 207) ){
+					ModbusBuf[0] = ev->ev_addr;
+					ModbusBuf[1] = 0x80 + msg_cmd;
+					ModbusBuf[2] = 0x02; // ILLEGAL DATA ADDRESS
+					msg_len = 3;
+					crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
+					ModbusBuf[msg_len++] = crc; //Add CRC to buf
+					ModbusBuf[msg_len++] = crc >> 8;
+					ev->ev_reg = NULL;
 				}
 				if( msg_cmd == RCOIL ){ //Read coils
-					// save quantity registers to read	
+					// save quantity coils to read	
 					ev->ev_len = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo];
 					if( ev->ev_len < 0x0001 || ev->ev_len > 0x07D0 ){
 						ModbusBuf[0] = ev->ev_addr;
@@ -440,7 +432,8 @@ void ModbusCarelHndlRcvd(void)
 				
 				} else if( msg_cmd == W1COIL ){ //one coil write command
 					// save register value
-					ev->ev_regvalue = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo];
+					ev->ev_regvalue = ModbusBuf[modbus_valHi] > 0 ? 1 : 0; // By Modbus specification coil regHi value should be FF or 00, regLo is always 00, in case FF we send 1, in case 0, send 0 
+					writeACK = false;
 				}
 				else if( msg_cmd == CMD03 ){ //multy reg read command
 					// save quantity registers to read
@@ -449,6 +442,7 @@ void ModbusCarelHndlRcvd(void)
 				} else if( msg_cmd == CMD06 ){ // one register write command		
 					// save register value
 					ev->ev_regvalue = ( ModbusBuf[modbus_valHi] << 8 ) | ModbusBuf[modbus_valLo];
+					writeACK = false;
 
 				} else if( msg_cmd == DEBUG ){
 				
@@ -588,7 +582,7 @@ void ModbusSend(void)//Reply Called by App
 void ModbusSendCarel(void)
 {
   uint32_t crc;
-	uint16_t i, j;
+	uint16_t i, j, i_stop, n_shift, n_shift_stop, byte_cnt;
   uint8_t msg_cmd, data_len, msg_len;
 #ifdef APDEBUG	
 	Count11 = 0;
@@ -600,17 +594,36 @@ void ModbusSendCarel(void)
 		ModbusBuf[modbus_function] = ev->ev_cmd;
 		msg_cmd = ev->ev_cmd;
 		
-		if( msg_cmd == RCOIL ){
-			ModbusBuf[modbus_bytecount] = ev->ev_len;
-			data_len = modbus_startdata + ModbusBuf[modbus_bytecount];
-			for(i = modbus_startdata, j = 0; i < data_len; i += 2, j++){
-				ModbusBuf[i] = ev->dataptr[j];
+		if( msg_cmd == RCOIL ){ // Read coil function
+			byte_cnt = 0;					// variable to store number of bytes to store coils values
+			data_len = ev->ev_len;// amount of coils to send
+			if( (data_len - 8) < 0 ){ // case when number of coils less than 8 bit, so we should put them to one byte
+				n_shift = 0; // a number of bit to shift coil value
+				n_shift_stop = n_shift + data_len; // max shift value
+				i_stop = 0; // data byte offset for Modbus message
+				ModbusBuf[modbus_coil_cnt] = byte_cnt = 1;		// in case number of coils < 8, place them to one byte
+			} else {
+				if( data_len % 8 ){
+					byte_cnt = data_len/8 + 1;
+				} else {
+					byte_cnt = data_len/8;
+				}
+				n_shift = 0;
+				n_shift_stop = 7;
+				i_stop = byte_cnt - 1;	
+				ModbusBuf[modbus_coil_cnt] = byte_cnt;			
+			}
+			for(i = modbus_startdata; i <= ( modbus_startdata + i_stop ); i++){
+				ModbusBuf[i] = 0;
+				for(j = 0; j < ev->ev_len && n_shift < n_shift_stop ; j++, n_shift++ ){
+					ModbusBuf[i] = ModbusBuf[i] | ( ev->dataptr[j] << n_shift );
+				}
 			}
 			free(ev->dataptr); // free memory allocated in corresponding section CarelSend function, Carel.c file
-			msg_len = data_len;			
+			msg_len = modbus_startdata + byte_cnt;			
 		} else if( msg_cmd == CMD03 ){
 			ModbusBuf[modbus_bytecount] = ev->ev_len * 2;
-			data_len = modbus_startdata + ModbusBuf[modbus_bytecount];
+			data_len = modbus_startdata + ev->ev_len * 2;
 			for(i = modbus_startdata, j = 0; i < data_len; i++, j++){
 				ModbusBuf[i] = ev->dataptr[j];
 			}
@@ -621,16 +634,20 @@ void ModbusSendCarel(void)
 		{
 			if(writeACK){
 				msg_len = 6;
-				writeACK = false; // Set false for next device write operation
+//				writeACK = false; // Set false for next device write operation
 			} else {
 				if( msg_cmd == CMD06 ){
-					ModbusBuf[0] = 0x86; // Exception
-					ModbusBuf[1] = 0x04; // SLAVE DEVICE FAILURE
-					msg_len = 2;
+					ModbusBuf[0] = ev->ev_addr;
+					ModbusBuf[1] = 0x86; // Exception
+					ModbusBuf[2] = 0x04; // SLAVE DEVICE FAILURE
+					msg_len = 3;
+					writeACK = true;
 				} else if( msg_cmd == W1COIL ){
-					ModbusBuf[0] = 0x85; // Exception
-					ModbusBuf[1] = 0x04; // SLAVE DEVICE FAILURE
-					msg_len = 2;
+					ModbusBuf[0] = ev->ev_addr;					
+					ModbusBuf[1] = 0x85; // Exception
+					ModbusBuf[2] = 0x04; // SLAVE DEVICE FAILURE
+					msg_len = 3;
+					writeACK = true;
 				} else {
 					ModbusBuf[0] = '?';
 					ModbusBuf[1] = '?';
@@ -640,9 +657,10 @@ void ModbusSendCarel(void)
 			}
 		}
 		else { // Exception
-				ModbusBuf[0] = 0x80 + msg_cmd;
-				ModbusBuf[1] = 0x01; // ILLEGAL FUNCTION
-				msg_len = 2;
+			ModbusBuf[0] = ev->ev_addr;				
+			ModbusBuf[1] = 0x80 + msg_cmd;
+			ModbusBuf[2] = 0x01; // ILLEGAL FUNCTION
+			msg_len = 3;
 		}
 		crc = ModbusCrc16(ModbusBuf, msg_len); //Calculate CRC
 		ModbusBuf[msg_len++] = crc; //Add CRC to buf 

@@ -40,6 +40,7 @@
 /* Semaphores defined in main_threads.c file */
 extern int32_t Time100msSemaphore;
 extern int32_t Time1secSemaphore;
+extern uint32_t T_sec;
 // Semaphore for transmit
 extern int32_t U3_RxSemaphore;
 // Semaphore for reception
@@ -227,6 +228,7 @@ int main(void)
 			/* THREADs INITIALIZATION CODE END */
 			break;
 		case CarelEasy:
+			T_sec = 39;
 			CtrlPortReg_Init();
 			USART1_CarelEasyInit();
 			/* TRIGGER INITIALIZATION CODE BEGIN */
@@ -288,6 +290,7 @@ int main(void)
 			/* THREADs INITIALIZATION CODE END */
 			break;
 		case CarelMPX:
+			T_sec = 19;
 			RS485_Init();
 			USART1_CarelEasyInit();
 			/* TRIGGER INITIALIZATION CODE BEGIN */
@@ -321,14 +324,13 @@ int main(void)
 		
 			OS_AddThread(&CarelMPXPortTxInit, 2);
 			OS_AddThread(&CarelPortSendMsg, 3);
-			OS_AddThread(&CarelSend, 3);
+			OS_AddThread(&CarelMPXSend, 3);
 			
 			OS_AddThread(&CarelPortRxInit, 2);			
 			OS_AddThread(&CarelPortReception, 3);
 			
 			OS_AddThread(&CarelScanHndl, 3);
 			OS_AddThread(&CarelHndlReceived, 3);
-			OS_AddThread(&CarelMPXSend, 3);
 			OS_AddThread(&trigCarelMPX, 3);
 			OS_AddThread(&readCarelMPX, 4);
 			OS_AddThread(&handleResponceCarelMPX, 4);

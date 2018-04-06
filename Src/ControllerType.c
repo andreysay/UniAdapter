@@ -83,7 +83,7 @@ void ControllerTypeDetection(void){
 	} else if (uhADCxConvertedData_Voltage_mVolt > 0 && uhADCxConvertedData_Voltage_mVolt < 400){
 		ControllerType = Dixel;
 	} else {
-			ControllerType = Unknown;
+		ControllerType = Unknown;
 	}
 	uhADCxConversionCompleted = 0;
 }

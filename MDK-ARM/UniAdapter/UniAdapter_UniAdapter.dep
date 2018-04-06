@@ -106,7 +106,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x59D730A0)
-F (../Src/main.c)(0x5AB0DAB1)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\main.o --omf_browse uniadapter\main.crf --depend uniadapter\main.d)
+F (../Src/main.c)(0x5AC63779)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\main.o --omf_browse uniadapter\main.crf --depend uniadapter\main.d)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x588BC994)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usart.h)(0x59D730A1)
 I (../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h)(0x59D7304C)
@@ -163,9 +163,9 @@ I (../Inc/ControllerType.h)(0x5A8D7CC8)
 I (../Inc/ControllerPort.h)(0x5A575175)
 I (../Inc/main_threads.h)(0x5A44D082)
 I (../Inc/Televis.h)(0x5A575966)
-I (../Inc/Command.h)(0x5AB257E9)
+I (../Inc/Command.h)(0x5AB89631)
 I (../Inc/Modbus.h)(0x5A7964E8)
-I (../Inc/Carel.h)(0x5AB35B64)
+I (../Inc/Carel.h)(0x5AB8962E)
 I (../Inc/iwdg.h)(0x5A7D8706)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_iwdg.h)(0x59D730A1)
 I (../Inc/LED.h)(0x5A325CDE)
@@ -442,7 +442,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_rcc.h)(0x59D730A1)
 I (../Inc/tim.h)(0x5A572CFB)
-F (..\Src\USART1.c)(0x5A9D436D)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\usart1.o --omf_browse uniadapter\usart1.crf --depend uniadapter\usart1.d)
+F (..\Src\USART1.c)(0x5AC5E101)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\usart1.o --omf_browse uniadapter\usart1.crf --depend uniadapter\usart1.d)
 I (../Inc/usart.h)(0x5A2647CD)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588BC994)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h)(0x59D730A0)
@@ -490,7 +490,7 @@ I (../Inc/LED.h)(0x5A325CDE)
 I (../Inc/USART1.h)(0x5A587572)
 I (../Inc/ControllerPort.h)(0x5A575175)
 I (../Inc/ControllerType.h)(0x5A8D7CC8)
-I (../Inc/Command.h)(0x5AB257E9)
+I (../Inc/Command.h)(0x5AB89631)
 F (..\Src\USART3.c)(0x5A9902D6)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\usart3.o --omf_browse uniadapter\usart3.crf --depend uniadapter\usart3.d)
 I (../Inc/usart.h)(0x5A2647CD)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588BC994)
@@ -579,7 +579,7 @@ I (../Inc/StartUp.h)(0x5A02C36F)
 I (../Inc/ErrorHandler.h)(0x5A30D3D4)
 I (../Inc/LED.h)(0x5A325CDE)
 I (../Inc/Televis.h)(0x5A575966)
-I (../Inc/Command.h)(0x5AB257E9)
+I (../Inc/Command.h)(0x5AB89631)
 I (../Inc/tim.h)(0x5A572CFB)
 F (..\Src\ControllerPort.c)(0x5A575175)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\controllerport.o --omf_browse uniadapter\controllerport.crf --depend uniadapter\controllerport.d)
 I (../Inc/ControllerPort.h)(0x5A575175)
@@ -613,7 +613,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x59D730A0)
-F (..\Src\Modbus.c)(0x5AB0F0D6)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\modbus.o --omf_browse uniadapter\modbus.crf --depend uniadapter\modbus.d)
+F (..\Src\Modbus.c)(0x5ABE2E3D)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\modbus.o --omf_browse uniadapter\modbus.crf --depend uniadapter\modbus.d)
 I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588BC994)
 I (../Inc/main.h)(0x5A7D8761)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x588BC994)
@@ -659,10 +659,10 @@ I (../Inc/StartUP.h)(0x5A02C36F)
 I (../Inc/os.h)(0x5A27F992)
 I (../Inc/ControllerType.h)(0x5A8D7CC8)
 I (../Inc/LED.h)(0x5A325CDE)
-I (../Inc/Carel.h)(0x5AB35B64)
+I (../Inc/Carel.h)(0x5AB8962E)
 I (../Inc/Modbus.h)(0x5A7964E8)
-I (../Inc/Command.h)(0x5AB257E9)
-F (..\Src\main_threads.c)(0x5A99189B)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\main_threads.o --omf_browse uniadapter\main_threads.crf --depend uniadapter\main_threads.d)
+I (../Inc/Command.h)(0x5AB89631)
+F (..\Src\main_threads.c)(0x5AC62937)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\main_threads.o --omf_browse uniadapter\main_threads.crf --depend uniadapter\main_threads.d)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usart.h)(0x59D730A1)
 I (../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h)(0x59D7304C)
 I (../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h)(0x59D7304B)
@@ -709,7 +709,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_exti.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_iwdg.h)(0x59D730A1)
 I (../Inc/tim.h)(0x5A572CFB)
 I (../Inc/stm32_assert.h)(0x59D73193)
-F (..\Src\ControllerType.c)(0x5A951BC7)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\controllertype.o --omf_browse uniadapter\controllertype.crf --depend uniadapter\controllertype.d)
+F (..\Src\ControllerType.c)(0x5ABDEA95)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\controllertype.o --omf_browse uniadapter\controllertype.crf --depend uniadapter\controllertype.d)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x588BC994)
 I (../Inc/adc.h)(0x5A2F85F6)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h)(0x59D730A0)
@@ -787,8 +787,8 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h)(0x59D730A0)
 I (../Inc/LED.h)(0x5A325CDE)
-F (..\Inc\Carel.h)(0x5AB35B64)()
-F (..\Src\Carel.c)(0x5AB3662E)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\carel.o --omf_browse uniadapter\carel.crf --depend uniadapter\carel.d)
+F (..\Inc\Carel.h)(0x5AB8962E)()
+F (..\Src\Carel.c)(0x5AC63183)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\carel.o --omf_browse uniadapter\carel.crf --depend uniadapter\carel.d)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588BC994)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x588BC994)
 I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588BC994)
@@ -821,14 +821,14 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x59D730A0)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x59D730A0)
-I (../Inc/Command.h)(0x5AB257E9)
+I (../Inc/Command.h)(0x5AB89631)
 I (../Inc/tim.h)(0x5A572CFB)
 I (../Inc/os.h)(0x5A27F992)
 I (../Inc/ControllerType.h)(0x5A8D7CC8)
 I (../Inc/ControllerPort.h)(0x5A575175)
 I (../Inc/LED.h)(0x5A325CDE)
 I (../Inc/StartUp.h)(0x5A02C36F)
-I (../Inc/Carel.h)(0x5AB35B64)
+I (../Inc/Carel.h)(0x5AB8962E)
 F (..\Src\iwdg.c)(0x5A7D8372)(-c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include --C99-I.\RTE\_UniAdapter-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.1.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o uniadapter\iwdg.o --omf_browse uniadapter\iwdg.crf --depend uniadapter\iwdg.d)
 I (../Inc/iwdg.h)(0x5A7D8706)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_bus.h)(0x59D730A0)
